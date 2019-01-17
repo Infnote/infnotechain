@@ -18,7 +18,7 @@ type Storage interface {
 	GetBlockByHash(int64, string) *Block
 	GetBlocks(int64, uint64, uint64) []*Block
 	SaveChain(*Chain) error
-	IncreaseHeight(*Chain)
+	IncreaseCount(*Chain)
 	SaveBlock(Block, int64)
 	Migrate()
 	Prune()
@@ -173,13 +173,13 @@ func (s SQLiteDriver) SaveChain(chain *Chain) error {
 	return err
 }
 
-func (s SQLiteDriver) IncreaseHeight(chain *Chain) {
+func (s SQLiteDriver) IncreaseCount(chain *Chain) {
 	query := `UPDATE chains SET height=height+1 WHERE id = ?`
 	_, err := s.db.Exec(query, chain.id)
 	if err != nil {
 		log.Fatal(err)
 	}
-	chain.Height += 1
+	chain.Count += 1
 }
 
 func (s SQLiteDriver) SaveBlock(block Block, id int64) {

@@ -75,11 +75,11 @@ func (b BroadcastBlock) Serialize() [] byte {
 func (b Info) Validate() *Error {
 	version, err := strconv.ParseFloat(b.Version, 32)
 	if err != nil || version != 1.1 {
-		return &Error{}
+		return IncompatibleProtocolVersion("only accept v1.1 protocol")
 	}
 
 	if b.Peers < 0 {
-		return &Error{}
+		return BadRequestError("'peers' needs to be a non-negative number")
 	}
 
 	return nil
@@ -88,20 +88,20 @@ func (b Info) Validate() *Error {
 func (b RequestBlocks) Validate() *Error {
 	chain := blockchain.LoadChain(b.ChainID)
 	if chain == nil {
-		return &Error{}
+		return ChainNotAcceptError(b.ChainID)
 	}
 	if b.From > b.To {
-		return &Error{}
+		return BadRequestError("'from' must greater or equal 'to'")
 	}
-	if chain.Height < b.From {
-		return &Error{}
+	if chain.Count < b.From {
+		return BadRequestError("request not existed blocks")
 	}
 	return nil
 }
 
 func (b RequstPeers) Validate() *Error {
 	if b.Count < 0 {
-		return &Error{}
+		return BadRequestError("'count' needs to be a non-negative number")
 	}
 	return nil
 }
@@ -110,10 +110,10 @@ func (b ResponsePeers) Validate() *Error {
 	for _, v := range b.Peers {
 		addr, err := url.Parse(v)
 		if err != nil {
-			return &Error{}
+			return URLError(err.Error())
 		}
 		if addr.Scheme != "ws" && addr.Scheme != "wss" {
-			return &Error{}
+			return URLError("not a websocket URL")
 		}
 	}
 	return nil
@@ -124,14 +124,14 @@ func (b *ResponseBlocks) Validate() *Error {
 		block := &blockchain.Block{}
 		err := json.Unmarshal(v, block)
 		if err != nil {
-			return &Error{}
+			return JSONDecodeError(err.Error())
 		}
 		if !block.IsValid() {
-			return &Error{}
+			return InvalidBlockError("invalid block hash value")
 		}
 
 		if blockchain.LoadChain(block.ChainID()) == nil {
-			return &Error{}
+			return ChainNotAcceptError(block.ChainID())
 		}
 
 		b.blocks = append(b.blocks, block)
@@ -143,16 +143,16 @@ func (b *BroadcastBlock) Validate() *Error {
 	b.block = &blockchain.Block{}
 	err := json.Unmarshal(b.Block, b.block)
 	if err != nil {
-		return &Error{}
+		return JSONDecodeError(err.Error())
 	}
 
 	chain := blockchain.LoadChain(b.block.ChainID())
 	if chain == nil {
-		return &Error{}
+		return ChainNotAcceptError(b.block.ChainID())
 	}
 
-	if b.block.Height < chain.Height {
-		return &Error{}
+	if b.block.Height < chain.Count {
+		return BlockAlreadyExistError(fmt.Sprintf("height %v on %v", b.block.Height, chain.ID))
 	}
 	return nil
 }
@@ -168,10 +168,10 @@ func (b Info) React() []Behavior {
 		if chain == nil {
 			continue
 		}
-		if chain.Height >= v {
+		if chain.Count >= v {
 			continue
 		}
-		behaviors = append(behaviors, RequestBlocks{k, chain.Height, v - 1})
+		behaviors = append(behaviors, RequestBlocks{k, chain.Count, v - 1})
 	}
 	return behaviors
 }

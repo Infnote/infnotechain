@@ -9,10 +9,10 @@ import (
 )
 
 type Chain struct {
-	ID     string
-	Height uint64
-	key    *crypto.Key
-	id     int64
+	ID    string
+	Count uint64
+	key   *crypto.Key
+	id    int64
 }
 
 var loadedChains = map[string]*Chain{}
@@ -49,7 +49,7 @@ func LoadChain(id string) *Chain {
 
 	chain = &Chain{}
 	var wif string
-	if !ShardStorage().GetChain(id, &chain.id, &wif, &chain.Height) {
+	if !ShardStorage().GetChain(id, &chain.id, &wif, &chain.Count) {
 		return nil
 	}
 	if len(wif) > 0 {
@@ -64,7 +64,7 @@ func LoadAllChains() []*Chain {
 	s := ShardStorage()
 	var chains []*Chain
 	s.GetAllChains(func(ref int64, id string, wif string, height uint64) {
-		chain := &Chain{ID: id, Height: height, id: ref}
+		chain := &Chain{ID: id, Count: height, id: ref}
 		if len(wif) > 0 {
 			chain.key, _ = crypto.FromWIF(wif)
 		}
@@ -90,9 +90,9 @@ func (c Chain) CreateBlock(payload []byte) *Block {
 		return nil
 	}
 
-	block := &Block{Height: c.Height, Time: uint64(time.Now().Unix()), Payload: payload}
-	if c.Height > 0 {
-		block.PrevHash = c.GetBlock(c.Height - 1).Hash
+	block := &Block{Height: c.Count, Time: uint64(time.Now().Unix()), Payload: payload}
+	if c.Count > 0 {
+		block.PrevHash = c.GetBlock(c.Count - 1).Hash
 	}
 
 	hash := utils.SHA256(block.DataForHashing())
@@ -102,6 +102,7 @@ func (c Chain) CreateBlock(payload []byte) *Block {
 	return block
 }
 
+// TODO: error info should be exposed
 func (c Chain) ValidateBlock(block *Block) bool {
 	if block.IsValid() && block.ChainID() == c.ID {
 		b := c.GetBlock(block.Height)
@@ -119,12 +120,11 @@ func (c Chain) ValidateBlock(block *Block) bool {
 	return false
 }
 
-// TODO: check block duplication
 func (c *Chain) SaveBlock(block *Block) {
 	if c.GetBlock(block.Height) == nil && c.ValidateBlock(block) {
 		ShardStorage().SaveBlock(*block, c.id)
-		c.Height += 1
-		ShardStorage().IncreaseHeight(c)
+		c.Count += 1
+		ShardStorage().IncreaseCount(c)
 	}
 }
 
@@ -132,7 +132,7 @@ func (c *Chain) Sync() {
 	err := ShardStorage().SaveChain(c)
 	if err != nil {
 		var wif string
-		ShardStorage().GetChain(c.ID, &c.id, &wif, &c.Height)
+		ShardStorage().GetChain(c.ID, &c.id, &wif, &c.Count)
 
 		c.key, err = crypto.FromWIF(wif)
 		if err != nil {
