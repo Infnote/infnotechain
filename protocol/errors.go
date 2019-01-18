@@ -1,5 +1,7 @@
 package protocol
 
+import "github.com/Infnote/infnotechain/blockchain"
+
 type Error struct {
 	Code string
 	Desc string
@@ -11,6 +13,10 @@ func (e Error) Validate() *Error {
 
 func (e Error) React() []Behavior {
 	return nil
+}
+
+func InvalidMessageError(err string) *Error {
+	return &Error{"InvalidMessage", err}
 }
 
 func IncompatibleProtocolVersion(err string) *Error {
@@ -29,12 +35,8 @@ func ChainNotAcceptError(err string) *Error {
 	return &Error{"ChainNotAcceptError", err}
 }
 
-func BlockAlreadyExistError(err string) *Error {
-	return &Error{"BlockAlreadyExistError", err}
-}
-
-func InvalidBlockError(err string) *Error {
-	return &Error{"InvalidBlockError", err}
+func BlockValidationError(err blockchain.BlockValidationError) *Error {
+	return &Error{err.Code(), err.Error()}
 }
 
 func URLError(err string) *Error {

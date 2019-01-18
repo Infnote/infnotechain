@@ -126,12 +126,15 @@ func (b *ResponseBlocks) Validate() *Error {
 		if err != nil {
 			return JSONDecodeError(err.Error())
 		}
-		if !block.IsValid() {
-			return InvalidBlockError("invalid block hash value")
+
+		chain := blockchain.LoadChain(block.ChainID())
+		if chain == nil {
+			return ChainNotAcceptError(block.ChainID())
 		}
 
-		if blockchain.LoadChain(block.ChainID()) == nil {
-			return ChainNotAcceptError(block.ChainID())
+		verr := chain.ValidateBlock(block)
+		if verr != nil {
+			return BlockValidationError(verr)
 		}
 
 		b.blocks = append(b.blocks, block)
@@ -151,8 +154,9 @@ func (b *BroadcastBlock) Validate() *Error {
 		return ChainNotAcceptError(b.block.ChainID())
 	}
 
-	if b.block.Height < chain.Count {
-		return BlockAlreadyExistError(fmt.Sprintf("height %v on %v", b.block.Height, chain.ID))
+	verr := chain.ValidateBlock(b.block)
+	if verr != nil {
+		return BlockValidationError(verr)
 	}
 	return nil
 }

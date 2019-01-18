@@ -19,6 +19,22 @@ func printMessage(msg *protocol.Message) {
 	_, _ = buffer.WriteTo(os.Stdout)
 }
 
+func TestTypeMap(t *testing.T) {
+	info := protocol.RequestBlocks{}
+
+	fmt.Println(protocol.MapType(info))
+}
+
+func TestBehaviorMap(t *testing.T) {
+	b, ok := protocol.MapBehavior("request:blocks").(*protocol.RequestBlocks)
+
+	if !ok {
+		t.Fail()
+	}
+
+	fmt.Println(b)
+}
+
 func TestInfoReaction(t *testing.T) {
 	info := protocol.Info{
 		Peers: 10,

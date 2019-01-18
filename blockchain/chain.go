@@ -102,26 +102,35 @@ func (c Chain) CreateBlock(payload []byte) *Block {
 	return block
 }
 
-// TODO: error info should be exposed
-func (c Chain) ValidateBlock(block *Block) bool {
-	if block.IsValid() && block.ChainID() == c.ID {
-		b := c.GetBlock(block.Height)
-		if b != nil && b.Hash == block.Hash &&
-			b.PrevHash == block.PrevHash &&
-			b.Signature == block.Signature {
-			return true
-		} else if b == nil {
-			prev := ShardStorage().GetBlockByHash(c.id, block.PrevHash)
-			if prev != nil {
-				return true
-			}
-		}
+// TODO: may need to cache database query result
+func (c Chain) ValidateBlock(block *Block) BlockValidationError {
+	if !block.IsValid() {
+		return InvalidBlockError{block, "block hash or signature is invalid"}
 	}
-	return false
+
+	if block.ChainID() != c.ID {
+		return MismatchedIDError{block, "the block id mismatch chain id"}
+	}
+
+	b := c.GetBlock(block.Height)
+
+	if b != nil {
+		if b.Hash != block.Hash || b.PrevHash != block.PrevHash {
+			return ForkError{b, block, "block on height %v already exist"}
+		}
+		return ExistBlockError{b, "block already exist"}
+	}
+
+	prev := ShardStorage().GetBlockByHash(c.id, block.PrevHash)
+	if prev == nil {
+		return DangledBlockError{b, "previous block is not exist"}
+	}
+
+	return nil
 }
 
 func (c *Chain) SaveBlock(block *Block) {
-	if c.GetBlock(block.Height) == nil && c.ValidateBlock(block) {
+	if c.ValidateBlock(block) == nil {
 		ShardStorage().SaveBlock(*block, c.id)
 		c.Count += 1
 		ShardStorage().IncreaseCount(c)
