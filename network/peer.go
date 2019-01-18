@@ -8,10 +8,12 @@ import (
 )
 
 type Peer struct {
-	Addr   string
-	Rank   int
-	Recv   chan []byte
-	Send   chan []byte
+	Addr     string
+	Rank     int
+	Recv     chan []byte
+	Send     chan []byte
+	IsServer bool
+
 	server *Server
 	conn   *websocket.Conn
 }

@@ -43,7 +43,7 @@ func TestInfoReaction(t *testing.T) {
 		},
 	}
 
-	printMessage(protocol.NewMessage("info", info))
+	printMessage(protocol.NewMessage(info))
 
 	fmt.Println(info.React())
 }
@@ -61,7 +61,7 @@ func TestRequestBlocks(t *testing.T) {
 	}
 
 	for _, v := range req.React() {
-		msg := protocol.NewMessage("response:blocks", v)
+		msg := protocol.NewMessage(v)
 		printMessage(msg)
 	}
 }

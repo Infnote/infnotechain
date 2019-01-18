@@ -19,6 +19,10 @@ func InvalidMessageError(err string) *Error {
 	return &Error{"InvalidMessage", err}
 }
 
+func InvalidBehaviorError(err string) *Error {
+	return &Error{"InvalidBehaviorError", err}
+}
+
 func IncompatibleProtocolVersion(err string) *Error {
 	return &Error{"IncompatibleProtocolVersion", err}
 }

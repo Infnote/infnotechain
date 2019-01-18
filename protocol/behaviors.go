@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Infnote/infnotechain/blockchain"
+	"golang.org/x/sys/unix"
 	"log"
 	"net/url"
 	"strconv"
@@ -48,6 +49,52 @@ type ResponseBlocks struct {
 type BroadcastBlock struct {
 	Block json.RawMessage `json:"block"`
 	block *blockchain.Block
+}
+
+func fixedBytesToString(data [256]byte) string {
+	var result []byte
+	for _, b := range data {
+		if b > 0 {
+			result = append(result, b)
+		} else {
+			break
+		}
+	}
+	return string(result)
+}
+
+// TODO: add support for windows
+// now only can get system info at *nix systems
+func newSysInfo() map[string]string {
+	sysinfo := &unix.Utsname{}
+	err := unix.Uname(sysinfo)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return map[string]string{
+		"sysname": fixedBytesToString(sysinfo.Sysname),
+		"nodename": fixedBytesToString(sysinfo.Nodename),
+		"release": fixedBytesToString(sysinfo.Release),
+		"version": fixedBytesToString(sysinfo.Version),
+		"machine": fixedBytesToString(sysinfo.Machine),
+	}
+}
+
+func NewInfo() *Info {
+	chains := blockchain.LoadAllChains()
+	chainMap := map[string]uint64{}
+	for _, chain := range chains {
+		chainMap[chain.ID] = chain.Count
+	}
+
+	return &Info{
+		Version: "1.1",
+		Peers:   0,
+		Chains:  chainMap,
+		Platform: newSysInfo(),
+		FullNode: true,
+	}
 }
 
 // - Serializations
@@ -234,4 +281,15 @@ func (b ResponseBlocks) React() []Behavior {
 func (b BroadcastBlock) React() []Behavior {
 	blockchain.LoadChain(b.block.ChainID()).SaveBlock(b.block)
 	return nil
+}
+
+// Deserialize
+func DeserializeBehavior(msg *Message) (Behavior, error) {
+	instance := MapBehavior(msg.Type)
+	err := json.Unmarshal(msg.Data, instance)
+	if err != nil {
+		return nil, err
+	}
+
+	return instance, nil
 }
