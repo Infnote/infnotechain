@@ -23,8 +23,8 @@ func InvalidBehaviorError(err string) *Error {
 	return &Error{"InvalidBehaviorError", err}
 }
 
-func IncompatibleProtocolVersion(err string) *Error {
-	return &Error{"IncompatibleProtocolVersion", err}
+func IncompatibleProtocolVersionError(err string) *Error {
+	return &Error{"IncompatibleProtocolVersionError", err}
 }
 
 func BadRequestError(err string) *Error  {

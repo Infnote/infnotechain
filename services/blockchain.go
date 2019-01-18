@@ -3,10 +3,9 @@ package services
 import (
 	"github.com/Infnote/infnotechain/network"
 	"github.com/Infnote/infnotechain/protocol"
-	"time"
 )
 
-var Peers = map[*network.Peer]time.Time{}
+var Peers = map[*network.Peer]bool{}
 
 // TODO: any error occur in this function should not crash entire app
 func handleMessages(peer *network.Peer) {
@@ -28,7 +27,8 @@ func handlePeers(server *network.Server) {
 	for {
 		select {
 		case peer := <-server.In:
-			Peers[peer] = time.Now()
+
+			Peers[peer] = true
 			peer.Send <- protocol.NewMessage(protocol.NewInfo()).Serialize()
 			go handleMessages(peer)
 		case peer := <-server.Out:

@@ -10,6 +10,7 @@ import (
 type Peer struct {
 	Addr     string
 	Rank     int
+	Last     *time.Time
 	Recv     chan []byte
 	Send     chan []byte
 	IsServer bool
@@ -18,15 +19,36 @@ type Peer struct {
 	conn   *websocket.Conn
 }
 
-func newPeer(addr string, rank int) *Peer {
-	return &Peer{Addr: addr, Rank: rank, Recv: make(chan []byte), Send: make(chan []byte)}
+type Storage interface {
+	CountOfPeers() int
+	GetPeers(count int) []*Peer
+	SavePeer(peer *Peer)
+	Migrate()
 }
 
 // 2 MB
 const MaxMessageSize = 1024 * 1024 * 2
 const WriteWait = 30 * time.Second
 
-func (c *Peer) Read() {
+var instance Storage
+
+func RegisterStorage(s Storage) {
+	instance = s
+}
+
+func SharedStorage() Storage {
+	return instance
+}
+
+func newPeer(addr string, rank int) *Peer {
+	return &Peer{Addr: addr, Rank: rank, Recv: make(chan []byte), Send: make(chan []byte)}
+}
+
+func (c *Peer) Save() {
+	instance.SavePeer(c)
+}
+
+func (c *Peer) read() {
 	defer func() {
 		c.server.Out <- c
 		_ = c.conn.Close()
@@ -48,7 +70,7 @@ func (c *Peer) Read() {
 	}
 }
 
-func (c *Peer) Write() {
+func (c *Peer) write() {
 	defer func() {
 		_ = c.conn.Close()
 		log.Printf("Peer %v writing closed", c.Addr)
@@ -83,6 +105,6 @@ func inbound(server *Server, w http.ResponseWriter, r *http.Request) {
 	peer.conn = conn
 	peer.server.In <- peer
 
-	go peer.Read()
-	go peer.Write()
+	go peer.read()
+	go peer.write()
 }

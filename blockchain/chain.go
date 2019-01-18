@@ -49,7 +49,7 @@ func LoadChain(id string) *Chain {
 
 	chain = &Chain{}
 	var wif string
-	if !ShardStorage().GetChain(id, &chain.id, &wif, &chain.Count) {
+	if !SharedStorage().GetChain(id, &chain.id, &wif, &chain.Count) {
 		return nil
 	}
 	if len(wif) > 0 {
@@ -61,7 +61,7 @@ func LoadChain(id string) *Chain {
 }
 
 func LoadAllChains() []*Chain {
-	s := ShardStorage()
+	s := SharedStorage()
 	var chains []*Chain
 	s.GetAllChains(func(ref int64, id string, wif string, height uint64) {
 		chain := &Chain{ID: id, Count: height, id: ref}
@@ -73,16 +73,31 @@ func LoadAllChains() []*Chain {
 	return chains
 }
 
+func (c Chain) InternalID() int64 {
+	return c.id
+}
+
+func (c Chain) SetInternalID(id int64) {
+	c.id = id
+}
+
 func (c Chain) IsOwner() bool {
 	return c.key != nil
 }
 
+func (c Chain) WIF() string {
+	if c.IsOwner() {
+		return c.key.ToWIF()
+	}
+	return ""
+}
+
 func (c Chain) GetBlock(height uint64) *Block {
-	return ShardStorage().GetBlock(c.id, height)
+	return SharedStorage().GetBlock(c.id, height)
 }
 
 func (c Chain) GetBlocks(from uint64, to uint64) []*Block {
-	return ShardStorage().GetBlocks(c.id, from, to)
+	return SharedStorage().GetBlocks(c.id, from, to)
 }
 
 func (c Chain) CreateBlock(payload []byte) *Block {
@@ -121,7 +136,7 @@ func (c Chain) ValidateBlock(block *Block) BlockValidationError {
 		return ExistBlockError{b, "block already exist"}
 	}
 
-	prev := ShardStorage().GetBlockByHash(c.id, block.PrevHash)
+	prev := SharedStorage().GetBlockByHash(c.id, block.PrevHash)
 	if prev == nil {
 		return DangledBlockError{b, "previous block is not exist"}
 	}
@@ -131,17 +146,17 @@ func (c Chain) ValidateBlock(block *Block) BlockValidationError {
 
 func (c *Chain) SaveBlock(block *Block) {
 	if c.ValidateBlock(block) == nil {
-		ShardStorage().SaveBlock(*block, c.id)
+		SharedStorage().SaveBlock(*block, c.id)
 		c.Count += 1
-		ShardStorage().IncreaseCount(c)
+		SharedStorage().IncreaseCount(c)
 	}
 }
 
 func (c *Chain) Sync() {
-	err := ShardStorage().SaveChain(c)
+	err := SharedStorage().SaveChain(c)
 	if err != nil {
 		var wif string
-		ShardStorage().GetChain(c.ID, &c.id, &wif, &c.Count)
+		SharedStorage().GetChain(c.ID, &c.id, &wif, &c.Count)
 
 		c.key, err = crypto.FromWIF(wif)
 		if err != nil {

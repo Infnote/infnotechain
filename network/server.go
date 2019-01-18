@@ -25,19 +25,18 @@ func NewServer() *Server {
 	}
 }
 
-func (s *Server) Connect(addr string) {
+func (s *Server) Connect(peer *Peer) {
 	conn, _, err := websocket.DefaultDialer.Dial(addr, nil)
 	if err != nil {
 		log.Println(err)
 	}
-	peer := newPeer(addr, 100)
 	peer.server = s
 	peer.conn = conn
 
 	s.In <- peer
 
-	go peer.Read()
-	go peer.Write()
+	go peer.read()
+	go peer.write()
 }
 
 func (s *Server) Serve() {

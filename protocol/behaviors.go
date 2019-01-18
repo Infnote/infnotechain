@@ -2,12 +2,13 @@ package protocol
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/Infnote/infnotechain/blockchain"
+	"github.com/Infnote/infnotechain/network"
 	"golang.org/x/sys/unix"
 	"log"
 	"net/url"
 	"strconv"
+	"time"
 )
 
 type Behavior interface {
@@ -90,7 +91,7 @@ func NewInfo() *Info {
 
 	return &Info{
 		Version: "1.1",
-		Peers:   0,
+		Peers:   network.SharedStorage().CountOfPeers(),
 		Chains:  chainMap,
 		Platform: newSysInfo(),
 		FullNode: true,
@@ -122,7 +123,7 @@ func (b BroadcastBlock) Serialize() [] byte {
 func (b Info) Validate() *Error {
 	version, err := strconv.ParseFloat(b.Version, 32)
 	if err != nil || version != 1.1 {
-		return IncompatibleProtocolVersion("only accept v1.1 protocol")
+		return IncompatibleProtocolVersionError("only accept v1.1 protocol")
 	}
 
 	if b.Peers < 0 {
@@ -265,8 +266,8 @@ func (b RequstPeers) React() []Behavior {
 
 func (b ResponsePeers) React() []Behavior {
 	for _, v := range b.Peers {
-		// save as a new peer
-		fmt.Println(v)
+		t := time.Unix(0, 0)
+		network.Peer{Addr: v, Rank: 100, Last: &t}.Save()
 	}
 	return nil
 }

@@ -3,20 +3,24 @@ package test
 import (
 	"fmt"
 	"github.com/Infnote/infnotechain/blockchain"
+	"github.com/Infnote/infnotechain/database"
 	"log"
 	"testing"
 )
 
-var storage = blockchain.ShardStorage()
+var storage = blockchain.SharedStorage()
 var sqlchain = blockchain.NewOwnedChain("KxUxDz8wbQbnxmnKiPUX9uquHB5tkPc8tF5U3uxmmb3yqnYf7MZb")
 
+func init() {
+	database.Register()
+}
 
 func TestMigrate(t *testing.T) {
-	blockchain.ShardStorage().Migrate()
+	blockchain.SharedStorage().Migrate()
 }
 
 func TestPrune(t *testing.T) {
-	blockchain.ShardStorage().Prune()
+	blockchain.SharedStorage().Prune()
 }
 
 func TestSaveChain(t *testing.T)  {

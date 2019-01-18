@@ -3,11 +3,17 @@ package test
 import (
 	"fmt"
 	"github.com/Infnote/infnotechain/blockchain"
+	"github.com/Infnote/infnotechain/database"
 	"log"
 	"testing"
 )
 
-var chain = blockchain.LoadAllChains()[0]
+var chain *blockchain.Chain
+
+func init() {
+	database.Register()
+	chain = blockchain.LoadAllChains()[0]
+}
 
 func TestCreateBlock(t *testing.T) {
 	block := chain.CreateBlock([]byte("Test Block"))
