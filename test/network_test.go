@@ -21,7 +21,7 @@ func TestMessage(t *testing.T) {
 	data2 := &protocol.Info{}
 	e := json.Unmarshal(msg2.Data, &data2)
 	if e != nil {
-		log.Fatal(e)
+		log.Fatal(err)
 	}
 	fmt.Println(data2)
 }

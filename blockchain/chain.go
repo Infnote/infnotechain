@@ -4,7 +4,6 @@ import (
 	"github.com/Infnote/infnotechain/blockchain/crypto"
 	"github.com/Infnote/infnotechain/utils"
 	"github.com/mr-tron/base58"
-	"log"
 	"time"
 )
 
@@ -32,7 +31,7 @@ func CreateChain(payload []byte) *Chain {
 func NewOwnedChain(wif string) *Chain {
 	key, err := crypto.FromWIF(wif)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	return &Chain{ID: key.ToAddress(), key: key}
 }
@@ -149,6 +148,7 @@ func (c *Chain) SaveBlock(block *Block) {
 		SharedStorage().SaveBlock(*block, c.id)
 		c.Count += 1
 		SharedStorage().IncreaseCount(c)
+		utils.L.Debugf("new block saved: %v", utils.Dump(block))
 	}
 }
 
@@ -160,7 +160,7 @@ func (c *Chain) Sync() {
 
 		c.key, err = crypto.FromWIF(wif)
 		if err != nil {
-			log.Fatal(err)
+			utils.L.Fatal(err)
 		}
 	}
 }

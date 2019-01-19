@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"github.com/Infnote/infnotechain/blockchain"
 	"github.com/Infnote/infnotechain/network"
+	"github.com/Infnote/infnotechain/utils"
 	"golang.org/x/sys/unix"
-	"log"
 	"net/url"
 	"strconv"
 	"time"
@@ -70,15 +70,15 @@ func newSysInfo() map[string]string {
 	sysinfo := &unix.Utsname{}
 	err := unix.Uname(sysinfo)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 
 	return map[string]string{
-		"sysname": fixedBytesToString(sysinfo.Sysname),
+		"system":   fixedBytesToString(sysinfo.Sysname),
 		"nodename": fixedBytesToString(sysinfo.Nodename),
-		"release": fixedBytesToString(sysinfo.Release),
-		"version": fixedBytesToString(sysinfo.Version),
-		"machine": fixedBytesToString(sysinfo.Machine),
+		"release":  fixedBytesToString(sysinfo.Release),
+		"version":  fixedBytesToString(sysinfo.Version),
+		"machine":  fixedBytesToString(sysinfo.Machine),
 	}
 }
 
@@ -90,9 +90,9 @@ func NewInfo() *Info {
 	}
 
 	return &Info{
-		Version: "1.1",
-		Peers:   network.SharedStorage().CountOfPeers(),
-		Chains:  chainMap,
+		Version:  "1.1",
+		Peers:    network.SharedStorage().CountOfPeers(),
+		Chains:   chainMap,
 		Platform: newSysInfo(),
 		FullNode: true,
 	}
@@ -106,7 +106,7 @@ func (b ResponseBlocks) Serialize() []byte {
 	}
 	data, err := json.Marshal(blocks)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	return data
 }
@@ -114,7 +114,7 @@ func (b ResponseBlocks) Serialize() []byte {
 func (b BroadcastBlock) Serialize() [] byte {
 	data, err := json.Marshal(map[string]json.RawMessage{"block": json.RawMessage(b.block.Serialize())})
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	return data
 }
@@ -267,7 +267,7 @@ func (b RequstPeers) React() []Behavior {
 func (b ResponsePeers) React() []Behavior {
 	for _, v := range b.Peers {
 		t := time.Unix(0, 0)
-		network.Peer{Addr: v, Rank: 100, Last: &t}.Save()
+		(&network.Peer{Addr: v, Rank: 100, Last: &t}).Save()
 	}
 	return nil
 }

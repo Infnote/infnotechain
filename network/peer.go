@@ -1,8 +1,8 @@
 package network
 
 import (
+	"github.com/Infnote/infnotechain/utils"
 	"github.com/gorilla/websocket"
-	"log"
 	"net/http"
 	"time"
 )
@@ -23,7 +23,6 @@ type Storage interface {
 	CountOfPeers() int
 	GetPeers(count int) []*Peer
 	SavePeer(peer *Peer)
-	Migrate()
 }
 
 // 2 MB
@@ -53,7 +52,7 @@ func (c *Peer) read() {
 		c.server.Out <- c
 		_ = c.conn.Close()
 		close(c.Recv)
-		log.Printf("Peer %v reading closed", c.Addr)
+		//utils.L.Debugf("peer %v reading closed", c.Addr)
 	}()
 
 	c.conn.SetReadLimit(MaxMessageSize)
@@ -61,7 +60,7 @@ func (c *Peer) read() {
 		_, data, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("Connection closed unexpectedly: %v", err)
+				utils.L.Debugf("connection closed unexpectedly: %v", err)
 			}
 			close(c.Send)
 			return
@@ -73,7 +72,7 @@ func (c *Peer) read() {
 func (c *Peer) write() {
 	defer func() {
 		_ = c.conn.Close()
-		log.Printf("Peer %v writing closed", c.Addr)
+		//utils.L.Debugf("peer %v writing closed", c.Addr)
 	}()
 	for {
 		select {
@@ -84,7 +83,7 @@ func (c *Peer) write() {
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.BinaryMessage)
+			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				return
 			}
@@ -97,7 +96,7 @@ func (c *Peer) write() {
 func inbound(server *Server, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 
 	peer := newPeer(conn.RemoteAddr().String(), 100)

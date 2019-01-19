@@ -1,8 +1,8 @@
 package network
 
 import (
+	"github.com/Infnote/infnotechain/utils"
 	"github.com/gorilla/websocket"
-	"log"
 	"net/http"
 )
 
@@ -15,20 +15,24 @@ type Server struct {
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 func NewServer() *Server {
 	return &Server{
-		make(map	[string]*Peer),
+		make(map[string]*Peer),
 		make(chan *Peer),
 		make(chan *Peer),
 	}
 }
 
 func (s *Server) Connect(peer *Peer) {
-	conn, _, err := websocket.DefaultDialer.Dial(addr, nil)
+	conn, _, err := websocket.DefaultDialer.Dial(peer.Addr, nil)
 	if err != nil {
-		log.Println(err)
+		utils.L.Warningf("failed to connect peer: %v", err)
+		return
 	}
 	peer.server = s
 	peer.conn = conn
@@ -44,8 +48,8 @@ func (s *Server) Serve() {
 		inbound(s, writer, request)
 	})
 
-	err := http.ListenAndServe("localhost:32767", nil)
+	err := http.ListenAndServe("0.0.0.0:32767", nil)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 }

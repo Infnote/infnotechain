@@ -3,9 +3,10 @@ package services
 import (
 	"github.com/Infnote/infnotechain/network"
 	"github.com/Infnote/infnotechain/protocol"
+	"github.com/Infnote/infnotechain/utils"
 )
 
-var Peers = map[*network.Peer]bool{}
+var ConnectedPeers = map[*network.Peer]bool{}
 
 // TODO: any error occur in this function should not crash entire app
 func handleMessages(peer *network.Peer) {
@@ -27,19 +28,22 @@ func handlePeers(server *network.Server) {
 	for {
 		select {
 		case peer := <-server.In:
-
-			Peers[peer] = true
+			utils.L.Infof("incoming peer: %v", peer.Addr)
+			ConnectedPeers[peer] = true
 			peer.Send <- protocol.NewMessage(protocol.NewInfo()).Serialize()
 			go handleMessages(peer)
 		case peer := <-server.Out:
-			delete(Peers, peer)
+			utils.L.Infof("outcoming peer: %v", peer.Addr)
+			delete(ConnectedPeers, peer)
 		}
 	}
 }
 
 // TODO: recover service after any error occurred
-func StartService() {
+func PeerService() {
 	server := network.NewServer()
 	go handlePeers(server)
+
+	utils.L.Info("network service start")
 	server.Serve()
 }

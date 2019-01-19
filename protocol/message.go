@@ -2,8 +2,8 @@ package protocol
 
 import (
 	"encoding/json"
+	"github.com/Infnote/infnotechain/utils"
 	"github.com/mr-tron/base58"
-	"log"
 	"math/rand"
 	"reflect"
 	"regexp"
@@ -57,17 +57,17 @@ func MapType(i Behavior) string {
 
 func NewMessage(data Behavior) *Message {
 	var d []byte
-	var e error
+	var err error
 	switch s := data.(type) {
 	case Serializable:
 		d = s.Serialize()
 		if !json.Valid(d) {
-			log.Fatal("not a valid json raw message")
+			utils.L.Fatal("not a valid json raw message")
 		}
 	default:
-		d, e = json.Marshal(s)
-		if e != nil {
-			log.Fatal(e)
+		d, err = json.Marshal(s)
+		if err != nil {
+			utils.L.Fatal(err)
 		}
 	}
 
@@ -93,7 +93,7 @@ func (m Message) Serialize() []byte {
 	data, err := json.Marshal(m)
 
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 
 	return data

@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"github.com/Infnote/infnotechain/blockchain"
 	"github.com/Infnote/infnotechain/network"
+	"github.com/Infnote/infnotechain/utils"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mr-tron/base58"
-	"log"
 	"os"
 )
 
@@ -20,7 +20,7 @@ func (s SQLiteDriver) GetChain(chainID string, ref *int64, wif *string, height *
 	query := `SELECT id, wif, height FROM chains WHERE chain_id = ? LIMIT 1`
 	rows, err := s.db.Query(query, chainID)
 	if err != nil {
-		log.Println(err)
+		utils.L.Debugf("sqlite query error: ", err)
 		return false
 	}
 
@@ -30,7 +30,7 @@ func (s SQLiteDriver) GetChain(chainID string, ref *int64, wif *string, height *
 
 	err = rows.Scan(ref, wif, height)
 	if err != nil {
-		log.Println(err)
+		utils.L.Debugf("sqlite scan error: ", err)
 		return false
 	}
 
@@ -41,7 +41,7 @@ func (s SQLiteDriver) GetAllChains(yield func(ref int64, id string, wif string, 
 	query := `SELECT id, chain_id, wif, height FROM chains`
 	rows, err := s.db.Query(query)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	defer func() { _ = rows.Close() }()
 
@@ -50,7 +50,7 @@ func (s SQLiteDriver) GetAllChains(yield func(ref int64, id string, wif string, 
 		var chainID, wif string
 		err = rows.Scan(&id, &chainID, &wif, &height)
 		if err != nil {
-			log.Fatal(err)
+			utils.L.Fatal(err)
 		}
 		yield(id, chainID, wif, uint64(height))
 	}
@@ -62,7 +62,7 @@ func (s SQLiteDriver) GetBlock(id int64, height uint64) *blockchain.Block {
 			  WHERE height = ? AND chain_id = ? LIMIT 1`
 	rows, err := s.db.Query(query, height, id)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	defer func() { _ = rows.Close() }()
 
@@ -71,11 +71,11 @@ func (s SQLiteDriver) GetBlock(id int64, height uint64) *blockchain.Block {
 		var payload string
 		err = rows.Scan(&block.Height, &block.Time, &block.Hash, &block.PrevHash, &block.Signature, &payload)
 		if err != nil {
-			log.Fatal(err)
+			utils.L.Fatal(err)
 		}
 		block.Payload, err = base58.Decode(payload)
 		if err != nil {
-			log.Fatal(err)
+			utils.L.Fatal(err)
 		}
 		return block
 	}
@@ -87,7 +87,7 @@ func (s SQLiteDriver) GetBlockByHash(id int64, hash string) *blockchain.Block {
 			  WHERE hash = ? AND chain_id = ? LIMIT 1`
 	rows, err := s.db.Query(query, hash, id)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	defer func() { _ = rows.Close() }()
 
@@ -96,11 +96,11 @@ func (s SQLiteDriver) GetBlockByHash(id int64, hash string) *blockchain.Block {
 		var payload string
 		err = rows.Scan(&block.Height, &block.Time, &block.Hash, &block.PrevHash, &block.Signature, &payload)
 		if err != nil {
-			log.Fatal(err)
+			utils.L.Fatal(err)
 		}
 		block.Payload, err = base58.Decode(payload)
 		if err != nil {
-			log.Fatal(err)
+			utils.L.Fatal(err)
 		}
 		return block
 	}
@@ -114,7 +114,7 @@ func (s SQLiteDriver) GetBlocks(id int64, from uint64, to uint64) []*blockchain.
 			  WHERE chain_id = ? AND height >= ? AND height <= ?`
 	rows, err := s.db.Query(query, id, from, to)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	defer func() { _ = rows.Close() }()
 
@@ -125,11 +125,10 @@ func (s SQLiteDriver) GetBlocks(id int64, from uint64, to uint64) []*blockchain.
 		var payload string
 		err = rows.Scan(&block.Height, &block.Time, &block.Hash, &block.PrevHash, &block.Signature, &payload)
 		if err != nil {
-			log.Fatal(err)
+			utils.L.Fatal(err)
 		}
 		block.Payload, _ = base58.Decode(payload)
 		blocks = append(blocks, block)
-		log.Println(block)
 	}
 	return blocks
 }
@@ -152,12 +151,12 @@ func (s SQLiteDriver) IncreaseCount(chain *blockchain.Chain) {
 	query := `UPDATE chains SET height=height+1 WHERE id = ?`
 	_, err := s.db.Exec(query, chain.InternalID())
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	chain.Count += 1
 }
 
-func (s SQLiteDriver) SaveBlock(block blockchain.Block, id int64) {
+func (s SQLiteDriver) SaveBlock(id int64, block *blockchain.Block,) {
 	query := `
 		INSERT INTO blocks (height, time, hash, prev_hash, signature, payload, chain_id) 
 		VALUES (?, ?, ?, ?, ?, ?, ?) 
@@ -173,7 +172,7 @@ func (s SQLiteDriver) SaveBlock(block blockchain.Block, id int64) {
 		base58.Encode(block.Payload),
 		id)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 }
 
@@ -183,7 +182,7 @@ func (s SQLiteDriver) CountOfPeers() int {
 	count := 0
 	err := s.db.QueryRow(query).Scan(&count)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 
 	return count
@@ -194,7 +193,7 @@ func (s SQLiteDriver) GetPeers(count int) []*network.Peer {
 
 	rows, err := s.db.Query(query, count)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	defer func() { _ = rows.Close() }()
 
@@ -203,7 +202,7 @@ func (s SQLiteDriver) GetPeers(count int) []*network.Peer {
 		peer := &network.Peer{}
 		err = rows.Scan(&peer.Addr, &peer.Rank)
 		if err != nil {
-			log.Fatal(err)
+			utils.L.Fatal(err)
 		}
 		peers = append(peers, peer)
 	}
@@ -216,19 +215,19 @@ func (s SQLiteDriver) SavePeer(peer *network.Peer) {
 
 	_, err := s.db.Exec(query, peer.Addr, peer.Rank, peer.Last)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 }
 
-func (s SQLiteDriver) Migrate() {
+func sqliteMigrate() {
 	err := os.MkdirAll("/usr/local/var/infnote/", 0755)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 
 	db, err := sql.Open("sqlite3", SQLiteDBFile)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 
 	query := `
@@ -259,10 +258,10 @@ func (s SQLiteDriver) Migrate() {
 	`
 	_, err = db.Exec(query)
 	if err != nil {
-		log.Fatal(err)
+
 	}
 }
 
-func (s SQLiteDriver) Prune() {
+func sqlitePrune() {
 	_ = os.Remove(SQLiteDBFile)
 }

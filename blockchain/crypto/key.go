@@ -7,7 +7,6 @@ import (
 	"github.com/Infnote/infnotechain/utils"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/mr-tron/base58"
-	"log"
 )
 
 type Key struct {
@@ -17,7 +16,7 @@ type Key struct {
 func NewKey() *Key {
 	privateKey, err := crypto.GenerateKey()
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	return &Key{privateKey}
 }
@@ -73,7 +72,7 @@ func (k Key) ToWIF() string {
 func (k Key) Sign(msg []byte) []byte {
 	sig, err := crypto.Sign(utils.SHA256(msg), k.privateKey)
 	if err != nil {
-		log.Fatal(err)
+		utils.L.Fatal(err)
 	}
 	return append([]byte{sig[len(sig)-1] + 31}, sig[:len(sig)-1]...)
 }

@@ -1,16 +1,14 @@
 package blockchain
 
 type Storage interface {
-	GetChain(string, *int64, *string, *uint64) bool
+	GetChain(chainID string, ref *int64, wif *string, height *uint64) bool
 	GetAllChains(func(ref int64, id string, wif string, height uint64))
-	GetBlock(int64, uint64) *Block
-	GetBlockByHash(int64, string) *Block
-	GetBlocks(int64, uint64, uint64) []*Block
-	SaveChain(*Chain) error
-	IncreaseCount(*Chain)
-	SaveBlock(Block, int64)
-	Migrate()
-	Prune()
+	GetBlock(id int64, height uint64) *Block
+	GetBlockByHash(id int64, hash string) *Block
+	GetBlocks(id int64, from uint64, to uint64) []*Block
+	SaveChain(chain *Chain) error
+	IncreaseCount(chain *Chain)
+	SaveBlock(id int64, block *Block)
 }
 
 var instance Storage

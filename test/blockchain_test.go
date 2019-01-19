@@ -12,7 +12,7 @@ var chain *blockchain.Chain
 
 func init() {
 	database.Register()
-	chain = blockchain.LoadAllChains()[0]
+	//chain = blockchain.LoadAllChains()[0]
 }
 
 func TestCreateBlock(t *testing.T) {

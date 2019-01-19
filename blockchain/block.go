@@ -5,7 +5,6 @@ import (
 	"github.com/Infnote/infnotechain/blockchain/crypto"
 	"github.com/Infnote/infnotechain/utils"
 	"github.com/mr-tron/base58"
-	"log"
 	"strconv"
 )
 
@@ -30,7 +29,7 @@ func (b Block) DataForHashing() []byte {
 	if len(b.PrevHash) > 0 {
 		prevHash, err := base58.Decode(b.PrevHash)
 		if err != nil {
-			log.Fatal(err)
+			utils.L.Fatal(err)
 		}
 		data = append(data, prevHash...)
 	}
@@ -49,12 +48,12 @@ func (b Block) IsValid() bool {
 func (b Block) ChainID() string {
 	sig, err := base58.Decode(b.Signature)
 	if err != nil {
-		log.Println(err)
+		utils.L.Debugf("invalid base58 string: %v", err)
 		return ""
 	}
 	addr, err := crypto.RecoverAddress(sig, b.DataForHashing())
 	if err != nil {
-		log.Println(err)
+		utils.L.Debugf("invalid signature: %v", err)
 		return ""
 	}
 	return addr
@@ -75,9 +74,9 @@ func (b Block) Serialize() []byte {
 		Payload   string	`json:"payload"`
 	}{(Alias)(b), base58.Encode(b.Payload)}
 
-	j, e := json.Marshal(data)
-	if e != nil {
-		log.Fatal(e)
+	j, err := json.Marshal(data)
+	if err != nil {
+		utils.L.Fatal(err)
 	}
 
 	b.data = j[:]
