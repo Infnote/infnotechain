@@ -46,3 +46,7 @@ func BlockValidationError(err blockchain.BlockValidationError) *Error {
 func URLError(err string) *Error {
 	return &Error{"URLError", err}
 }
+
+func DuplicateBroadcastError(err string) *Error {
+	return &Error{"DuplicateBroadcastError", err}
+}

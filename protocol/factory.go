@@ -14,7 +14,7 @@ func serialize(behaviors ...Behavior) [][]byte {
 	return result
 }
 
-func HandleJSONData(data []byte) [][]byte {
+func HandleJSONData(sender interface{}, data []byte) [][]byte {
 	msg, err := DeserializeMessage(data)
 	if err != nil {
 		utils.L.Debugf("%v: %v", err, string(data))
@@ -31,6 +31,12 @@ func HandleJSONData(data []byte) [][]byte {
 	if err != nil {
 		utils.L.Debugf("%v: %+v", err, string(msg.Data))
 		return serialize(InvalidBehaviorError("invalid format of message data"))
+	}
+
+	b, ok := behavior.(*BroadcastBlock)
+	if ok {
+		b.ID = msg.ID
+		b.Sender = sender
 	}
 
 	utils.L.Debugf("message data received:\n%v", pretty.Sprint(behavior))

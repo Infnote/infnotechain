@@ -21,8 +21,19 @@ func handleMessages(peer *network.Peer) {
 		if !ok {
 			return
 		}
-		for _, v := range protocol.HandleJSONData(data) {
+		for _, v := range protocol.HandleJSONData(peer, data) {
 			peer.Send <- v
+		}
+	}
+}
+
+func handleBroadcast() {
+	for {
+		broadcast := <- protocol.Broadcast
+		for peer := range ConnectedPeers {
+			if peer != broadcast.Sender {
+				peer.Send <- broadcast.Message().Serialize()
+			}
 		}
 	}
 }
@@ -46,6 +57,7 @@ func handlePeers(server *network.Server) {
 func PeerService() {
 	server := network.NewServer()
 	go handlePeers(server)
+	go handleBroadcast()
 
 	utils.L.Info("network service start")
 	server.Serve()

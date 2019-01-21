@@ -47,11 +47,6 @@ type ResponseBlocks struct {
 	blocks []*blockchain.Block
 }
 
-type BroadcastBlock struct {
-	Block json.RawMessage `json:"block"`
-	block *blockchain.Block
-}
-
 func fixedBytesToString(data [256]byte) string {
 	var result []byte
 	for _, b := range data {
@@ -105,14 +100,6 @@ func (b ResponseBlocks) Serialize() []byte {
 		blocks = append(blocks, json.RawMessage(block.Serialize()))
 	}
 	data, err := json.Marshal(blocks)
-	if err != nil {
-		utils.L.Fatal(err)
-	}
-	return data
-}
-
-func (b BroadcastBlock) Serialize() [] byte {
-	data, err := json.Marshal(map[string]json.RawMessage{"block": json.RawMessage(b.block.Serialize())})
 	if err != nil {
 		utils.L.Fatal(err)
 	}
@@ -181,7 +168,7 @@ func (b *ResponseBlocks) Validate() *Error {
 
 		chain := blockchain.LoadChain(block.ChainID())
 		if chain == nil {
-			return ChainNotAcceptError(fmt.Sprintf("recovered chain id: %v", block.ChainID()))
+			return ChainNotAcceptError(fmt.Sprintf("recovered chain ID: %v", block.ChainID()))
 		}
 
 		verr := chain.ValidateBlockCached(block)
@@ -191,26 +178,6 @@ func (b *ResponseBlocks) Validate() *Error {
 		}
 
 		b.blocks = append(b.blocks, block)
-	}
-	return nil
-}
-
-func (b *BroadcastBlock) Validate() *Error {
-	block, err := blockchain.DeserializeBlock(b.Block)
-	if err != nil {
-		return JSONDecodeError(err.Error())
-	}
-	b.block = block
-
-	chain := blockchain.LoadChain(b.block.ChainID())
-	if chain == nil {
-		return ChainNotAcceptError(fmt.Sprintf("recovered chain id: %v", b.block.ChainID()))
-	}
-
-	verr := chain.ValidateBlock(b.block)
-	if verr != nil {
-		utils.L.Debugf("%v", verr)
-		return BlockValidationError(verr)
 	}
 	return nil
 }
@@ -267,7 +234,11 @@ func (b RequestBlocks) React() []Behavior {
 }
 
 func (b RequstPeers) React() []Behavior {
-	return []Behavior{ResponsePeers{[]string{"wss://chain.infnote.com:32767/"}}}
+	var peers []string
+	for _, p := range network.SharedStorage().GetPeers(b.Count) {
+		peers = append(peers, p.Addr)
+	}
+	return []Behavior{ResponsePeers{peers}}
 }
 
 func (b ResponsePeers) React() []Behavior {
@@ -283,11 +254,6 @@ func (b ResponseBlocks) React() []Behavior {
 		blockchain.LoadChain(v.ChainID()).CommitCache()
 	}
 	return nil
-}
-
-func (b *BroadcastBlock) React() []Behavior {
-	blockchain.LoadChain(b.block.ChainID()).SaveBlock(b.block)
-	return []Behavior{b}
 }
 
 // Deserialize

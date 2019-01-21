@@ -16,7 +16,7 @@ type Serializable interface {
 }
 
 type Message struct {
-	ID   string          `json:"id"`
+	ID   string          `json:"ID"`
 	Type string          `json:"type"`
 	Data json.RawMessage `json:"data"`
 }
