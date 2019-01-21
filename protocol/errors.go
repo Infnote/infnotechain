@@ -40,7 +40,7 @@ func ChainNotAcceptError(err string) *Error {
 }
 
 func BlockValidationError(err blockchain.BlockValidationError) *Error {
-	return &Error{err.Code(), err.Error()}
+	return &Error{"BlockValidationError", err.Code()}
 }
 
 func URLError(err string) *Error {

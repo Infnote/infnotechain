@@ -9,14 +9,15 @@ import (
 )
 
 type Block struct {
-	Height    uint64	`json:"height"`
-	Time      uint64	`json:"time"`
-	PrevHash  string	`json:"prev_hash"`
-	Hash      string	`json:"hash"`
-	Signature string	`json:"signature"`
-	Payload   []byte	`json:"payload"`
+	Height    uint64 `json:"height"`
+	Time      uint64 `json:"time"`
+	PrevHash  string `json:"prev_hash"`
+	Hash      string `json:"hash"`
+	Signature string `json:"signature"`
+	Payload   []byte `json:"payload"`
 
-	data []byte
+	recoveredChainID string
+	data             []byte
 }
 
 // Create a byte array for hashing
@@ -37,15 +38,21 @@ func (b Block) DataForHashing() []byte {
 }
 
 // TODO: store result to reduce calculations
-func (b Block) IsValid() bool {
-	if base58.Encode(utils.SHA256(b.DataForHashing())) == b.Hash && len(b.ChainID()) > 0 {
-		return true
+func (b *Block) Validate() BlockValidationError {
+	if base58.Encode(utils.SHA256(b.DataForHashing())) != b.Hash {
+		return &InvalidBlockError{b, "hash value not match"}
+	} else if len(b.ChainID()) == 0 {
+		return &InvalidBlockError{b, "cannot recover chain id"}
 	}
-	return false
+	return nil
 }
 
 // TODO: store result to reduce calculations
 func (b Block) ChainID() string {
+	if len(b.recoveredChainID) > 0 {
+		return b.recoveredChainID
+	}
+
 	sig, err := base58.Decode(b.Signature)
 	if err != nil {
 		utils.L.Debugf("invalid base58 string: %v", err)
@@ -56,6 +63,8 @@ func (b Block) ChainID() string {
 		utils.L.Debugf("invalid signature: %v", err)
 		return ""
 	}
+
+	b.recoveredChainID = addr
 	return addr
 }
 
@@ -71,7 +80,7 @@ func (b Block) Serialize() []byte {
 	type Alias Block
 	data := struct {
 		Alias
-		Payload   string	`json:"payload"`
+		Payload string `json:"payload"`
 	}{(Alias)(b), base58.Encode(b.Payload)}
 
 	j, err := json.Marshal(data)
@@ -81,4 +90,28 @@ func (b Block) Serialize() []byte {
 
 	b.data = j[:]
 	return j
+}
+
+func DeserializeBlock(message json.RawMessage) (*Block, error) {
+	data := &struct {
+		Block
+		Payload string `json:"payload"`
+	}{}
+	err := json.Unmarshal(message, data)
+	if err != nil {
+		return nil, err
+	}
+
+	payload, err := base58.Decode(data.Payload)
+	if err != nil {
+		return nil, err
+	}
+	return &Block{
+		Height:    data.Height,
+		Time:      data.Time,
+		PrevHash:  data.PrevHash,
+		Hash:      data.Hash,
+		Signature: data.Signature,
+		Payload:   payload,
+	}, nil
 }

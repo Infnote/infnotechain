@@ -2,12 +2,12 @@ package protocol
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Infnote/infnotechain/blockchain"
 	"github.com/Infnote/infnotechain/network"
 	"github.com/Infnote/infnotechain/utils"
 	"golang.org/x/sys/unix"
 	"net/url"
-	"strconv"
 	"time"
 )
 
@@ -121,8 +121,8 @@ func (b BroadcastBlock) Serialize() [] byte {
 
 // - Validations
 func (b Info) Validate() *Error {
-	version, err := strconv.ParseFloat(b.Version, 32)
-	if err != nil || version != 1.1 {
+	//version, err := strconv.ParseFloat(b.Version, 32)
+	if b.Version != "1.1" {
 		return IncompatibleProtocolVersionError("only accept v1.1 protocol")
 	}
 
@@ -169,19 +169,24 @@ func (b ResponsePeers) Validate() *Error {
 
 func (b *ResponseBlocks) Validate() *Error {
 	for _, v := range b.Blocks {
-		block := &blockchain.Block{}
-		err := json.Unmarshal(v, block)
+		block, err := blockchain.DeserializeBlock(v)
 		if err != nil {
 			return JSONDecodeError(err.Error())
 		}
 
-		chain := blockchain.LoadChain(block.ChainID())
-		if chain == nil {
-			return ChainNotAcceptError(block.ChainID())
+		if err := block.Validate(); err != nil {
+			utils.L.Debugf("a invalid block: %v", err.Error())
+			return BlockValidationError(err)
 		}
 
-		verr := chain.ValidateBlock(block)
+		chain := blockchain.LoadChain(block.ChainID())
+		if chain == nil {
+			return ChainNotAcceptError(fmt.Sprintf("recovered chain id: %v", block.ChainID()))
+		}
+
+		verr := chain.ValidateBlockCached(block)
 		if verr != nil {
+			utils.L.Debugf("%v", verr)
 			return BlockValidationError(verr)
 		}
 
@@ -191,19 +196,20 @@ func (b *ResponseBlocks) Validate() *Error {
 }
 
 func (b *BroadcastBlock) Validate() *Error {
-	b.block = &blockchain.Block{}
-	err := json.Unmarshal(b.Block, b.block)
+	block, err := blockchain.DeserializeBlock(b.Block)
 	if err != nil {
 		return JSONDecodeError(err.Error())
 	}
+	b.block = block
 
 	chain := blockchain.LoadChain(b.block.ChainID())
 	if chain == nil {
-		return ChainNotAcceptError(b.block.ChainID())
+		return ChainNotAcceptError(fmt.Sprintf("recovered chain id: %v", b.block.ChainID()))
 	}
 
 	verr := chain.ValidateBlock(b.block)
 	if verr != nil {
+		utils.L.Debugf("%v", verr)
 		return BlockValidationError(verr)
 	}
 	return nil
@@ -213,7 +219,7 @@ func (b *BroadcastBlock) Validate() *Error {
 func (b Info) React() []Behavior {
 	var behaviors []Behavior
 	if b.Peers > 0 {
-		behaviors = append(behaviors, RequstPeers{b.Peers})
+		behaviors = append(behaviors, &RequstPeers{b.Peers})
 	}
 	for k, v := range b.Chains {
 		chain := blockchain.LoadChain(k)
@@ -223,7 +229,7 @@ func (b Info) React() []Behavior {
 		if chain.Count >= v {
 			continue
 		}
-		behaviors = append(behaviors, RequestBlocks{k, chain.Count, v - 1})
+		behaviors = append(behaviors, &RequestBlocks{k, chain.Count, v - 1})
 	}
 	return behaviors
 }
@@ -274,14 +280,14 @@ func (b ResponsePeers) React() []Behavior {
 
 func (b ResponseBlocks) React() []Behavior {
 	for _, v := range b.blocks {
-		blockchain.LoadChain(v.ChainID()).SaveBlock(v)
+		blockchain.LoadChain(v.ChainID()).CommitCache()
 	}
 	return nil
 }
 
-func (b BroadcastBlock) React() []Behavior {
+func (b *BroadcastBlock) React() []Behavior {
 	blockchain.LoadChain(b.block.ChainID()).SaveBlock(b.block)
-	return nil
+	return []Behavior{b}
 }
 
 // Deserialize

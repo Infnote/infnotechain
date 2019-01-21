@@ -29,8 +29,8 @@ type ExistBlockError struct {
 }
 
 type MismatchedIDError struct {
-	block *Block
-	desc  string
+	chainID string
+	recoveredChainID string
 }
 
 type DangledBlockError struct {
@@ -80,7 +80,10 @@ func (e ExistBlockError) Error() string {
 }
 
 func (e MismatchedIDError) Error() string {
-	return e.desc + ":\n" + pretty.Sprint(e.block)
+	return fmt.Sprintf(
+		"the Ref recovered from block (%v) mismatch chain Ref (%v)",
+		e.recoveredChainID,
+		e.chainID)
 }
 
 func (e DangledBlockError) Error() string {

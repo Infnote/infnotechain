@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Infnote/infnotechain/blockchain"
 	"github.com/Infnote/infnotechain/database"
+	"github.com/mr-tron/base58"
 	"log"
 	"testing"
 )
@@ -16,11 +17,11 @@ func init() {
 }
 
 func TestMigrate(t *testing.T) {
-	blockchain.SharedStorage().Migrate()
+	database.Migrate()
 }
 
 func TestPrune(t *testing.T) {
-	blockchain.SharedStorage().Prune()
+	database.Prune()
 }
 
 func TestSaveChain(t *testing.T)  {
@@ -28,7 +29,14 @@ func TestSaveChain(t *testing.T)  {
 }
 
 func TestSaveBlock(t *testing.T) {
-
+	payload, _ := base58.Decode("5k1XmJn4556WCM")
+	blockchain.SharedStorage().SaveBlock(0, &blockchain.Block{
+		Height: 0,
+		Time: 0,
+		Hash: "DiuvcftK8K51umFQpFY71ipefjxMQ1dRyYsDyNrUozbP",
+		Signature: "3qhEnjcJJh3kRKMuB7tKWdzoCbGWvQ2i3969ipy91nGp8hHpro7PfHxhj385BaasQFSophLvDYoSpKMqMd3H7Kh9r",
+		Payload: payload,
+	})
 }
 
 func TestGetAllChains(t *testing.T) {

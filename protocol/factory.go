@@ -1,11 +1,14 @@
 package protocol
 
-import "github.com/Infnote/infnotechain/utils"
+import (
+	"github.com/Infnote/infnotechain/utils"
+	"github.com/kr/pretty"
+)
 
 func serialize(behaviors ...Behavior) [][]byte {
 	var result [][]byte
 	for _, v := range behaviors {
-		utils.L.Debugf("made behavior: \n%v", utils.Dump(v))
+		utils.L.Debugf("made behavior:\n%v", pretty.Sprint(v))
 		result = append(result, NewMessage(v).Serialize())
 	}
 	return result
@@ -26,13 +29,14 @@ func HandleJSONData(data []byte) [][]byte {
 
 	behavior, err = DeserializeBehavior(msg)
 	if err != nil {
-		utils.L.Debugf("%v: %v", err, string(msg.Data))
+		utils.L.Debugf("%v: %+v", err, string(msg.Data))
 		return serialize(InvalidBehaviorError("invalid format of message data"))
 	}
 
+	utils.L.Debugf("message data received:\n%v", pretty.Sprint(behavior))
+
 	rerr := behavior.Validate()
 	if rerr != nil {
-		utils.L.Debugf("invalid behavior: \n%v", utils.Dump(rerr))
 		return serialize(rerr)
 	}
 

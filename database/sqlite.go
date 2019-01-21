@@ -14,21 +14,22 @@ type SQLiteDriver struct {
 	db *sql.DB
 }
 
-const SQLiteDBFile = "/usr/local/var/infnote/data.db"
+const SQLiteDBFile = "/usr/local/var/infnote/data.db?cache=shared&mode=rwc"
 
-func (s SQLiteDriver) GetChain(chainID string, ref *int64, wif *string, height *uint64) bool {
+func (s SQLiteDriver) GetChain(chainID string, ref *int64, wif *string, count *uint64) bool {
 	query := `SELECT id, wif, height FROM chains WHERE chain_id = ? LIMIT 1`
 	rows, err := s.db.Query(query, chainID)
 	if err != nil {
 		utils.L.Debugf("sqlite query error: ", err)
 		return false
 	}
+	defer func() { _ = rows.Close() }()
 
 	if !rows.Next() {
 		return false
 	}
 
-	err = rows.Scan(ref, wif, height)
+	err = rows.Scan(ref, wif, count)
 	if err != nil {
 		utils.L.Debugf("sqlite scan error: ", err)
 		return false
@@ -37,7 +38,7 @@ func (s SQLiteDriver) GetChain(chainID string, ref *int64, wif *string, height *
 	return true
 }
 
-func (s SQLiteDriver) GetAllChains(yield func(ref int64, id string, wif string, height uint64)) {
+func (s SQLiteDriver) GetAllChains(yield func(ref int64, id string, wif string, count uint64)) {
 	query := `SELECT id, chain_id, wif, height FROM chains`
 	rows, err := s.db.Query(query)
 	if err != nil {
@@ -46,13 +47,13 @@ func (s SQLiteDriver) GetAllChains(yield func(ref int64, id string, wif string, 
 	defer func() { _ = rows.Close() }()
 
 	for rows.Next() {
-		var id, height int64
+		var id, count int64
 		var chainID, wif string
-		err = rows.Scan(&id, &chainID, &wif, &height)
+		err = rows.Scan(&id, &chainID, &wif, &count)
 		if err != nil {
 			utils.L.Fatal(err)
 		}
-		yield(id, chainID, wif, uint64(height))
+		yield(id, chainID, wif, uint64(count))
 	}
 }
 
@@ -143,20 +144,20 @@ func (s SQLiteDriver) SaveChain(chain *blockchain.Chain) error {
 		return err
 	}
 	id, err := result.LastInsertId()
-	chain.SetInternalID(id)
+	chain.Ref = id
 	return err
 }
 
 func (s SQLiteDriver) IncreaseCount(chain *blockchain.Chain) {
 	query := `UPDATE chains SET height=height+1 WHERE id = ?`
-	_, err := s.db.Exec(query, chain.InternalID())
+	_, err := s.db.Exec(query, chain.Ref)
 	if err != nil {
 		utils.L.Fatal(err)
 	}
 	chain.Count += 1
 }
 
-func (s SQLiteDriver) SaveBlock(id int64, block *blockchain.Block,) {
+func (s SQLiteDriver) SaveBlock(id int64, block *blockchain.Block) {
 	query := `
 		INSERT INTO blocks (height, time, hash, prev_hash, signature, payload, chain_id) 
 		VALUES (?, ?, ?, ?, ?, ?, ?) 

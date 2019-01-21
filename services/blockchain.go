@@ -11,7 +11,10 @@ var ConnectedPeers = map[*network.Peer]bool{}
 // TODO: any error occur in this function should not crash entire app
 func handleMessages(peer *network.Peer) {
 	defer func() {
-		recover()
+		if info := recover(); info != nil {
+			utils.L.Errorf("%#v", info)
+			handleMessages(peer)
+		}
 	}()
 	for {
 		data, ok := <-peer.Recv

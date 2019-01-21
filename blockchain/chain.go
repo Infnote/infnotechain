@@ -3,6 +3,7 @@ package blockchain
 import (
 	"github.com/Infnote/infnotechain/blockchain/crypto"
 	"github.com/Infnote/infnotechain/utils"
+	"github.com/kr/pretty"
 	"github.com/mr-tron/base58"
 	"time"
 )
@@ -11,7 +12,8 @@ type Chain struct {
 	ID    string
 	Count uint64
 	key   *crypto.Key
-	id    int64
+	Ref   int64
+	cache map[uint64]*Block
 }
 
 var loadedChains = map[string]*Chain{}
@@ -20,8 +22,9 @@ var loadedChains = map[string]*Chain{}
 func CreateChain(payload []byte) *Chain {
 	key := crypto.NewKey()
 	chain := &Chain{
-		ID:  key.ToAddress(),
-		key: key,
+		ID:    key.ToAddress(),
+		key:   key,
+		cache: map[uint64]*Block{},
 	}
 	chain.Sync()
 	chain.SaveBlock(chain.CreateBlock(payload))
@@ -33,11 +36,11 @@ func NewOwnedChain(wif string) *Chain {
 	if err != nil {
 		utils.L.Fatal(err)
 	}
-	return &Chain{ID: key.ToAddress(), key: key}
+	return &Chain{ID: key.ToAddress(), key: key, cache: map[uint64]*Block{}}
 }
 
 func NewReadonlyChain(id string) *Chain {
-	return &Chain{ID: id}
+	return &Chain{ID: id, cache: map[uint64]*Block{}}
 }
 
 func LoadChain(id string) *Chain {
@@ -46,9 +49,9 @@ func LoadChain(id string) *Chain {
 		return chain
 	}
 
-	chain = &Chain{}
+	chain = &Chain{ID: id, cache: map[uint64]*Block{}}
 	var wif string
-	if !SharedStorage().GetChain(id, &chain.id, &wif, &chain.Count) {
+	if !SharedStorage().GetChain(id, &chain.Ref, &wif, &chain.Count) {
 		return nil
 	}
 	if len(wif) > 0 {
@@ -62,22 +65,14 @@ func LoadChain(id string) *Chain {
 func LoadAllChains() []*Chain {
 	s := SharedStorage()
 	var chains []*Chain
-	s.GetAllChains(func(ref int64, id string, wif string, height uint64) {
-		chain := &Chain{ID: id, Count: height, id: ref}
+	s.GetAllChains(func(ref int64, id string, wif string, count uint64) {
+		chain := &Chain{ID: id, Count: count, Ref: ref, cache: map[uint64]*Block{}}
 		if len(wif) > 0 {
 			chain.key, _ = crypto.FromWIF(wif)
 		}
 		chains = append(chains, chain)
 	})
 	return chains
-}
-
-func (c Chain) InternalID() int64 {
-	return c.id
-}
-
-func (c Chain) SetInternalID(id int64) {
-	c.id = id
 }
 
 func (c Chain) IsOwner() bool {
@@ -92,11 +87,14 @@ func (c Chain) WIF() string {
 }
 
 func (c Chain) GetBlock(height uint64) *Block {
-	return SharedStorage().GetBlock(c.id, height)
+	if block := c.cache[height]; block != nil {
+		return block
+	}
+	return SharedStorage().GetBlock(c.Ref, height)
 }
 
 func (c Chain) GetBlocks(from uint64, to uint64) []*Block {
-	return SharedStorage().GetBlocks(c.id, from, to)
+	return SharedStorage().GetBlocks(c.Ref, from, to)
 }
 
 func (c Chain) CreateBlock(payload []byte) *Block {
@@ -118,12 +116,12 @@ func (c Chain) CreateBlock(payload []byte) *Block {
 
 // TODO: may need to cache database query result
 func (c Chain) ValidateBlock(block *Block) BlockValidationError {
-	if !block.IsValid() {
-		return InvalidBlockError{block, "block hash or signature is invalid"}
+	if err := block.Validate(); err != nil {
+		return err
 	}
 
 	if block.ChainID() != c.ID {
-		return MismatchedIDError{block, "the block id mismatch chain id"}
+		return MismatchedIDError{c.ID, block.ChainID()}
 	}
 
 	b := c.GetBlock(block.Height)
@@ -135,9 +133,14 @@ func (c Chain) ValidateBlock(block *Block) BlockValidationError {
 		return ExistBlockError{b, "block already exist"}
 	}
 
-	prev := SharedStorage().GetBlockByHash(c.id, block.PrevHash)
-	if prev == nil {
-		return DangledBlockError{b, "previous block is not exist"}
+	if block.Height > 0 {
+		prev := c.GetBlock(block.Height-1)
+		if prev == nil {
+			return DangledBlockError{b, "previous block is not exist"}
+		}
+		if prev.Hash != block.PrevHash {
+			return InvalidBlockError{b, "previous hash is not match"}
+		}
 	}
 
 	return nil
@@ -145,10 +148,30 @@ func (c Chain) ValidateBlock(block *Block) BlockValidationError {
 
 func (c *Chain) SaveBlock(block *Block) {
 	if c.ValidateBlock(block) == nil {
-		SharedStorage().SaveBlock(*block, c.id)
+		SharedStorage().SaveBlock(c.Ref, block)
 		c.Count += 1
 		SharedStorage().IncreaseCount(c)
-		utils.L.Debugf("new block saved: %v", utils.Dump(block))
+		utils.L.Debugf("new block saved: %#v", block)
+	}
+}
+
+func (c *Chain) ValidateBlockCached(block *Block) BlockValidationError {
+	err := c.ValidateBlock(block)
+	if err != nil {
+		return err
+	}
+	utils.L.Debugf("block cached: %v", pretty.Sprint(block))
+	c.cache[block.Height] = block
+	return nil
+}
+
+func (c *Chain) CommitCache() {
+	for _, block := range c.cache {
+		SharedStorage().SaveBlock(c.Ref, block)
+		c.Count += 1
+		SharedStorage().IncreaseCount(c)
+		delete(c.cache, block.Height)
+		utils.L.Debugf("block saved: %v", pretty.Sprint(block))
 	}
 }
 
@@ -156,7 +179,7 @@ func (c *Chain) Sync() {
 	err := SharedStorage().SaveChain(c)
 	if err != nil {
 		var wif string
-		SharedStorage().GetChain(c.ID, &c.id, &wif, &c.Count)
+		SharedStorage().GetChain(c.ID, &c.Ref, &wif, &c.Count)
 
 		c.key, err = crypto.FromWIF(wif)
 		if err != nil {
