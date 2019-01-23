@@ -104,7 +104,11 @@ func (c Chain) CreateBlock(payload []byte) *Block {
 
 	block := &Block{Height: c.Count, Time: uint64(time.Now().Unix()), Payload: payload}
 	if c.Count > 0 {
-		block.PrevHash = c.GetBlock(c.Count - 1).Hash
+		prev := c.GetBlock(c.Count - 1)
+		if prev == nil {
+			utils.L.Fatalf("attempt get block at height [%v] on chain [%v] failed", c.Count - 1, c.ID)
+		}
+		block.PrevHash = prev.Hash
 	}
 
 	hash := utils.SHA256(block.DataForHashing())
@@ -146,13 +150,14 @@ func (c Chain) ValidateBlock(block *Block) BlockValidationError {
 	return nil
 }
 
-func (c *Chain) SaveBlock(block *Block) {
+func (c *Chain) SaveBlock(block *Block) bool {
 	if c.ValidateBlock(block) == nil {
 		SharedStorage().SaveBlock(c.Ref, block)
-		c.Count += 1
 		SharedStorage().IncreaseCount(c)
 		utils.L.Debugf("new block saved: %#v", block)
+		return true
 	}
+	return false
 }
 
 func (c *Chain) ValidateBlockCached(block *Block) BlockValidationError {
@@ -168,7 +173,6 @@ func (c *Chain) ValidateBlockCached(block *Block) BlockValidationError {
 func (c *Chain) CommitCache() {
 	for _, block := range c.cache {
 		SharedStorage().SaveBlock(c.Ref, block)
-		c.Count += 1
 		SharedStorage().IncreaseCount(c)
 		delete(c.cache, block.Height)
 		utils.L.Debugf("block saved: %v", pretty.Sprint(block))

@@ -28,7 +28,7 @@ type Info struct {
 	FullNode bool              `json:"full_node"`
 }
 
-type RequstPeers struct {
+type RequestPeers struct {
 	Count int `json:"count"`
 }
 
@@ -99,7 +99,7 @@ func (b ResponseBlocks) Serialize() []byte {
 	for _, block := range b.blocks {
 		blocks = append(blocks, json.RawMessage(block.Serialize()))
 	}
-	data, err := json.Marshal(blocks)
+	data, err := json.Marshal(map[string][]json.RawMessage{"blocks": blocks})
 	if err != nil {
 		utils.L.Fatal(err)
 	}
@@ -134,7 +134,7 @@ func (b RequestBlocks) Validate() *Error {
 	return nil
 }
 
-func (b RequstPeers) Validate() *Error {
+func (b RequestPeers) Validate() *Error {
 	if b.Count < 0 {
 		return BadRequestError("'count' needs to be a non-negative number")
 	}
@@ -142,6 +142,7 @@ func (b RequstPeers) Validate() *Error {
 }
 
 func (b ResponsePeers) Validate() *Error {
+	var processed []string
 	for _, v := range b.Peers {
 		addr, err := url.Parse(v)
 		if err != nil {
@@ -150,7 +151,9 @@ func (b ResponsePeers) Validate() *Error {
 		if addr.Scheme != "ws" && addr.Scheme != "wss" {
 			return URLError("not a websocket URL")
 		}
+		processed = append(processed, addr.String())
 	}
+	b.Peers = processed
 	return nil
 }
 
@@ -186,7 +189,7 @@ func (b *ResponseBlocks) Validate() *Error {
 func (b Info) React() []Behavior {
 	var behaviors []Behavior
 	if b.Peers > 0 {
-		behaviors = append(behaviors, &RequstPeers{b.Peers})
+		behaviors = append(behaviors, &RequestPeers{b.Peers})
 	}
 	for k, v := range b.Chains {
 		chain := blockchain.LoadChain(k)
@@ -233,7 +236,7 @@ func (b RequestBlocks) React() []Behavior {
 	return nil
 }
 
-func (b RequstPeers) React() []Behavior {
+func (b RequestPeers) React() []Behavior {
 	var peers []string
 	for _, p := range network.SharedStorage().GetPeers(b.Count) {
 		peers = append(peers, p.Addr)
@@ -244,7 +247,7 @@ func (b RequstPeers) React() []Behavior {
 func (b ResponsePeers) React() []Behavior {
 	for _, v := range b.Peers {
 		t := time.Unix(0, 0)
-		(&network.Peer{Addr: v, Rank: 100, Last: &t}).Save()
+		(&network.Peer{Addr: v, Rank: 100, Last: t}).Save()
 	}
 	return nil
 }

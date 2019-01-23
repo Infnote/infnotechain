@@ -8,16 +8,17 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mr-tron/base58"
 	"os"
+	"time"
 )
 
 type SQLiteDriver struct {
 	db *sql.DB
 }
 
-const SQLiteDBFile = "/usr/local/var/infnote/data.db?cache=shared&mode=rwc"
+const SQLiteDBFile = "/usr/local/var/infnote/data.db"
 
 func (s SQLiteDriver) GetChain(chainID string, ref *int64, wif *string, count *uint64) bool {
-	query := `SELECT id, wif, height FROM chains WHERE chain_id = ? LIMIT 1`
+	query := `SELECT id, wif, count FROM chains WHERE chain_id = ? LIMIT 1`
 	rows, err := s.db.Query(query, chainID)
 	if err != nil {
 		utils.L.Debugf("sqlite query error: ", err)
@@ -39,7 +40,7 @@ func (s SQLiteDriver) GetChain(chainID string, ref *int64, wif *string, count *u
 }
 
 func (s SQLiteDriver) GetAllChains(yield func(ref int64, id string, wif string, count uint64)) {
-	query := `SELECT id, chain_id, wif, height FROM chains`
+	query := `SELECT id, chain_id, wif, count FROM chains`
 	rows, err := s.db.Query(query)
 	if err != nil {
 		utils.L.Fatal(err)
@@ -149,7 +150,7 @@ func (s SQLiteDriver) SaveChain(chain *blockchain.Chain) error {
 }
 
 func (s SQLiteDriver) IncreaseCount(chain *blockchain.Chain) {
-	query := `UPDATE chains SET height=height+1 WHERE id = ?`
+	query := `UPDATE chains SET count=count+1 WHERE id = ?`
 	_, err := s.db.Exec(query, chain.Ref)
 	if err != nil {
 		utils.L.Fatal(err)
@@ -189,8 +190,39 @@ func (s SQLiteDriver) CountOfPeers() int {
 	return count
 }
 
+func (s SQLiteDriver) scanPeers(rows *sql.Rows) []*network.Peer {
+	var peers []*network.Peer
+	for rows.Next() {
+		var addr string
+		var rank int
+		var last int64
+		err := rows.Scan(&addr, &rank, &last)
+		if err != nil {
+			utils.L.Fatal(err)
+		}
+		peer := network.NewPeer(addr, rank)
+		peer.IsServer = true
+		peer.Last = time.Unix(last, 0)
+		peers = append(peers, peer)
+	}
+
+	return peers
+}
+
+func (s SQLiteDriver) GetAllPeers() []*network.Peer {
+	query := `SELECT addr, rank, last FROM peers ORDER BY rank`
+
+	rows, err := s.db.Query(query)
+	if err != nil {
+		utils.L.Fatal(err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	return s.scanPeers(rows)
+}
+
 func (s SQLiteDriver) GetPeers(count int) []*network.Peer {
-	query := `SELECT addr, rank FROM peers ORDER BY rank LIMIT ?`
+	query := `SELECT addr, rank, last FROM peers ORDER BY rank LIMIT ?`
 
 	rows, err := s.db.Query(query, count)
 	if err != nil {
@@ -198,25 +230,16 @@ func (s SQLiteDriver) GetPeers(count int) []*network.Peer {
 	}
 	defer func() { _ = rows.Close() }()
 
-	var peers []*network.Peer
-	for rows.Next() {
-		peer := &network.Peer{}
-		err = rows.Scan(&peer.Addr, &peer.Rank)
-		if err != nil {
-			utils.L.Fatal(err)
-		}
-		peers = append(peers, peer)
-	}
-
-	return peers
+	return s.scanPeers(rows)
 }
 
+// TODO: need a better error check
 func (s SQLiteDriver) SavePeer(peer *network.Peer) {
 	query := `INSERT INTO peers VALUES (?, ?, ?)`
 
-	_, err := s.db.Exec(query, peer.Addr, peer.Rank, peer.Last)
+	_, err := s.db.Exec(query, peer.Addr, peer.Rank, peer.Last.Unix())
 	if err != nil {
-		utils.L.Fatal(err)
+		utils.L.Debugf("existed peer: %v", peer.Addr)
 	}
 }
 
@@ -236,7 +259,7 @@ func sqliteMigrate() {
 			id			INTEGER PRIMARY KEY,
 			chain_id 	TEXT NOT NULL,
 			wif      	TEXT NOT NULL,
-			height		INTEGER NOT NULL DEFAULT 0
+			count		INTEGER NOT NULL DEFAULT 0
 		);
 		CREATE TABLE blocks (
 			height 		INTEGER NOT NULL,
@@ -249,9 +272,9 @@ func sqliteMigrate() {
 			FOREIGN KEY (chain_id) REFERENCES chains(id)
 		);
 		CREATE TABLE peers (
-			addr TEXT PRIMARY KEY,
-			rank INTEGER,
-			last INTEGER
+			addr 	TEXT PRIMARY KEY,
+			rank 	INTEGER,
+			last 	INTEGER
 		);
 		CREATE UNIQUE INDEX chains_chain_id ON chains(chain_id);
 		CREATE INDEX blocks_height ON blocks(height);

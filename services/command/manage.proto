@@ -1,0 +1,72 @@
+syntax = "proto3";
+package manage;
+
+message PeerRequest {
+    int32 count = 1;
+}
+
+message PeerResponse {
+    string addr = 1;
+    int32  rank = 2;
+    int64  last = 3;
+}
+
+message ChainRequest {
+    string id = 1;
+}
+
+message ChainResponse {
+    int64  ref   = 1;
+    string id    = 2;
+    uint64 count = 3;
+}
+
+message BlockRequest {
+    string chainID = 1;
+    uint64 from    = 2;
+    uint64 to      = 3;
+}
+
+message BlockResponse {
+    uint64 height    = 1;
+    uint64 time      = 2;
+    string prevHash  = 3;
+    string hash      = 4;
+    string signature = 5;
+    bytes  payload   = 6;
+}
+
+message ChainCreationRequest {
+    string name    = 1;
+    string author  = 2;
+    string website = 3;
+    string email   = 4;
+    string desc    = 5;
+}
+
+message ChainCreationResponse {
+    int64 ref  = 1;
+    string id  = 2;
+    string wif = 3;
+}
+
+message BlockCreationRequest {
+    string chainID = 1;
+    bytes  payload = 2;
+}
+
+message BlockCreationResponse {
+    uint64 height    = 1;
+    uint64 time      = 2;
+    string prevHash  = 3;
+    string hash      = 4;
+    string signature = 5;
+}
+
+service IFCManage {
+    rpc GetPeers   (PeerRequest)           returns (stream PeerResponse);
+    rpc GetChains  (ChainRequest)          returns (stream ChainResponse);
+    rpc GetBlocks  (BlockRequest)          returns (stream BlockResponse);
+    rpc CreateChain (ChainCreationRequest) returns (ChainCreationResponse);
+    rpc CreateBlock (BlockCreationRequest) returns (BlockCreationResponse);
+}

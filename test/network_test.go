@@ -6,6 +6,7 @@ import (
 	"github.com/Infnote/infnotechain/network"
 	"github.com/Infnote/infnotechain/protocol"
 	"log"
+	"net/url"
 	"testing"
 )
 
@@ -35,4 +36,27 @@ func TestEcho(t *testing.T) {
 		fmt.Println(<- peer.Recv)
 	}()
 	<- s.Out
+}
+
+// TODO:
+func TestURLParse(t *testing.T) {
+	raw := "wss://1.2.3.4/websocket"
+
+	obj, err := url.Parse(raw)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	port := obj.Port()
+	if len(port) == 0 {
+		if obj.Scheme == "ws" {
+			port = "80"
+		} else if obj.Scheme == "wss" {
+			port = "443"
+		}
+	}
+
+	result := obj.Scheme + "://" + obj.Hostname() + ":" + port + obj.RequestURI()
+
+	fmt.Println(result)
 }

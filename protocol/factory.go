@@ -39,7 +39,7 @@ func HandleJSONData(sender interface{}, data []byte) [][]byte {
 		b.Sender = sender
 	}
 
-	utils.L.Debugf("message data received:\n%v", pretty.Sprint(behavior))
+	utils.L.Debugf("message data received: %v", string(msg.Data))
 
 	rerr := behavior.Validate()
 	if rerr != nil {

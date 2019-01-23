@@ -10,7 +10,7 @@ import (
 type Peer struct {
 	Addr     string
 	Rank     int
-	Last     *time.Time
+	Last     time.Time
 	Recv     chan []byte
 	Send     chan []byte
 	IsServer bool
@@ -21,6 +21,7 @@ type Peer struct {
 
 type Storage interface {
 	CountOfPeers() int
+	GetAllPeers() []*Peer
 	GetPeers(count int) []*Peer
 	SavePeer(peer *Peer)
 }
@@ -39,8 +40,13 @@ func SharedStorage() Storage {
 	return instance
 }
 
-func newPeer(addr string, rank int) *Peer {
-	return &Peer{Addr: addr, Rank: rank, Recv: make(chan []byte), Send: make(chan []byte)}
+func NewPeer(addr string, rank int) *Peer {
+	return &Peer{
+		Addr: addr,
+		Rank: rank,
+		Last: time.Now(),
+		Recv: make(chan []byte),
+		Send: make(chan []byte)}
 }
 
 func (c *Peer) Save() {
@@ -99,7 +105,7 @@ func inbound(server *Server, w http.ResponseWriter, r *http.Request) {
 		utils.L.Fatal(err)
 	}
 
-	peer := newPeer(conn.RemoteAddr().String(), 100)
+	peer := NewPeer(conn.RemoteAddr().String(), 100)
 	peer.server = server
 	peer.conn = conn
 	peer.server.In <- peer

@@ -7,7 +7,11 @@
 - [ ] Blocks request strategy
 - [ ] Refresh connections strategy
 - [ ] Peers updating strategy
-- [ ] Clean boardcast id periodically
+    - [ ] Validate peer address
+    - [ ] Ranking peers
+    - [ ] Filter invalid peers received from outside
+    - [ ] Check address equivalence then repleace the old one
+- [ ] Clean boardcast id regularly
 - [ ] Need some kind of authorization before boardcast
 - [ ] Ranking strategy
     - [ ] Bad chain detection

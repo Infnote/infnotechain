@@ -29,7 +29,8 @@ func handleMessages(peer *network.Peer) {
 
 func handleBroadcast() {
 	for {
-		broadcast := <- protocol.Broadcast
+		broadcast := <- protocol.BroadcastChannel
+		utils.L.Debugf("broadcast a block")
 		for peer := range ConnectedPeers {
 			if peer != broadcast.Sender {
 				peer.Send <- broadcast.Message().Serialize()

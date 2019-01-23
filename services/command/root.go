@@ -1,4 +1,4 @@
-package cmd
+package command
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-var rootCmd = &cobra.Command{
+var directCmd = &cobra.Command{
 	Use:   "ifc",
 	Short: "Infnote Chain is a blockchain implementation with peer-to-peer network.",
 	Long: `Infnote is a decentralized information sharing system based on blockchain and peer-to-peer network, 
@@ -19,9 +19,19 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+var cliRootCmd = &cobra.Command{}
+
+func DirectExecute() {
+	initDirectCommands()
+	if err := directCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+}
+
+func CLIExecute(args []string) {
+	cliRootCmd.SetArgs(args)
+	if err := cliRootCmd.Execute(); err != nil {
+		fmt.Println(err)
 	}
 }

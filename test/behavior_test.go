@@ -49,7 +49,7 @@ func TestInfoReaction(t *testing.T) {
 }
 
 func TestRequestPeers(t *testing.T) {
-	req := protocol.RequstPeers{Count: 1}
+	req := protocol.RequestPeers{Count: 1}
 
 	fmt.Println(req.React())
 }

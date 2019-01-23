@@ -10,7 +10,8 @@ import (
 // TODO: clear every 1 hour
 var broadcastKeys = map[string]bool{}
 
-var Broadcast = make(chan *BroadcastBlock)
+// TODO: may need to find a better way to save the channel
+var BroadcastChannel = make(chan *BroadcastBlock)
 
 type BroadcastBlock struct {
 	Block  json.RawMessage `json:"block"`
@@ -19,9 +20,16 @@ type BroadcastBlock struct {
 	Sender interface{}
 }
 
+func (b *BroadcastBlock) SetBlock(block *blockchain.Block) {
+	b.block = block
+}
+
 func (b *BroadcastBlock) Message() *Message {
 	msg := NewMessage(b)
-	msg.ID = b.ID
+	if len(b.ID) > 0 {
+		msg.ID = b.ID
+	}
+	broadcastKeys[b.ID] = true
 	return msg
 }
 
@@ -40,6 +48,10 @@ func (b *BroadcastBlock) Validate() *Error {
 	}
 	b.block = block
 
+	if broadcastKeys[b.ID] {
+		return DuplicateBroadcastError(b.ID)
+	}
+
 	chain := blockchain.LoadChain(b.block.ChainID())
 	if chain == nil {
 		return ChainNotAcceptError(fmt.Sprintf("recovered chain ID: %v", b.block.ChainID()))
@@ -51,10 +63,6 @@ func (b *BroadcastBlock) Validate() *Error {
 		return BlockValidationError(verr)
 	}
 
-	if broadcastKeys[b.ID] {
-		return DuplicateBroadcastError(b.ID)
-	}
-
 	return nil
 }
 
@@ -62,7 +70,7 @@ func (b *BroadcastBlock) React() []Behavior {
 	blockchain.LoadChain(b.block.ChainID()).SaveBlock(b.block)
 	broadcastKeys[b.ID] = true
 	go func() {
-		Broadcast <- b
+		BroadcastChannel <- b
 	}()
 	return nil
 }
