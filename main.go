@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	database.Migrate()
 	database.Register()
 	command.DirectExecute()
 }

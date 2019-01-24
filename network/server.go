@@ -1,8 +1,10 @@
 package network
 
 import (
+	"fmt"
 	"github.com/Infnote/infnotechain/utils"
 	"github.com/gorilla/websocket"
+	"github.com/spf13/viper"
 	"net/http"
 )
 
@@ -48,7 +50,11 @@ func (s *Server) Serve() {
 		inbound(s, writer, request)
 	})
 
-	err := http.ListenAndServe("0.0.0.0:32767", nil)
+	err := http.ListenAndServe(
+		fmt.Sprintf(
+			"%v:%v",
+			viper.GetString("server.host"),
+			viper.GetString("server.port")), nil)
 	if err != nil {
 		utils.L.Fatal(err)
 	}

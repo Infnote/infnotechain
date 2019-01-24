@@ -7,7 +7,9 @@ import (
 	"github.com/Infnote/infnotechain/utils"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mr-tron/base58"
+	"github.com/spf13/viper"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -244,15 +246,29 @@ func (s SQLiteDriver) SavePeer(peer *network.Peer) {
 }
 
 func sqliteMigrate() {
-	err := os.MkdirAll("/usr/local/var/infnote/", 0755)
+	file := viper.GetString("data.file")
+	_, err := os.Stat(file)
+
+	// do nothing if file exists
+	if err == nil {
+		return
+	}
+	// cannot process if file with errors which is not "not exist"
+	if !os.IsNotExist(err) {
+		utils.L.Error("%v", err)
+		return
+	}
+
+	err = os.MkdirAll(filepath.Dir(file), 0755)
 	if err != nil {
 		utils.L.Fatal(err)
 	}
 
-	db, err := sql.Open("sqlite3", SQLiteDBFile)
+	db, err := sql.Open("sqlite3", file)
 	if err != nil {
 		utils.L.Fatal(err)
 	}
+	defer func() { _ = db.Close() }()
 
 	query := `
 		CREATE TABLE chains (
@@ -282,10 +298,12 @@ func sqliteMigrate() {
 	`
 	_, err = db.Exec(query)
 	if err != nil {
-
+		utils.L.Warning("%v", err)
+	} else {
+		utils.L.Info("database created")
 	}
 }
 
 func sqlitePrune() {
-	_ = os.Remove(SQLiteDBFile)
+	_ = os.Remove(viper.GetString("data.file"))
 }

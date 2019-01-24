@@ -6,6 +6,7 @@ import (
 	"github.com/Infnote/infnotechain/blockchain"
 	"github.com/Infnote/infnotechain/network"
 	"github.com/Infnote/infnotechain/utils"
+	"github.com/spf13/viper"
 	"golang.org/x/sys/unix"
 	"net/url"
 	"time"
@@ -188,7 +189,7 @@ func (b *ResponseBlocks) Validate() *Error {
 // - Reactions
 func (b Info) React() []Behavior {
 	var behaviors []Behavior
-	if b.Peers > 0 {
+	if b.Peers > 0 && viper.GetBool("peer.sync") {
 		behaviors = append(behaviors, &RequestPeers{b.Peers})
 	}
 	for k, v := range b.Chains {

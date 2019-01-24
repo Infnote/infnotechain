@@ -11,6 +11,7 @@ import (
 	"github.com/Infnote/infnotechain/services/codegen"
 	"github.com/Infnote/infnotechain/utils"
 	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"io"
 	"io/ioutil"
@@ -40,15 +41,16 @@ func RunDaemon() {
 		utils.L.Fatal(err)
 	}
 
-	err = ioutil.WriteFile("/tmp/ifc.pid", []byte(fmt.Sprintf("%d", pid)), 0655)
+	err = ioutil.WriteFile(viper.GetString("daemon.pid"), []byte(fmt.Sprintf("%d", pid)), 0655)
 	if err != nil {
 		utils.L.Fatal(err)
 	}
 	fmt.Printf("Infnote Chain service start in child process %v\n", pid)
+	utils.SetLoggingMode(utils.FILE)
 }
 
 func StopDaemon() {
-	b, err := ioutil.ReadFile("/tmp/ifc.pid")
+	b, err := ioutil.ReadFile(viper.GetString("daemon.pid"))
 	if err != nil {
 		utils.L.Fatal(err)
 	}
@@ -72,7 +74,13 @@ func StopDaemon() {
 }
 
 func RunManageServer() {
-	conn, err := net.Listen("tcp", "localhost:32700")
+	conn, err := net.Listen(
+		"tcp",
+		fmt.Sprintf(
+			"%v:%v",
+			viper.GetString("manage.host"),
+			viper.GetString("manage.port")))
+
 	if err != nil {
 		utils.L.Fatal(err)
 	}

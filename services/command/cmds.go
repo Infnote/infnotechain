@@ -3,10 +3,11 @@ package command
 import (
 	"errors"
 	"fmt"
-	"github.com/Infnote/infnotechain/database"
 	"github.com/Infnote/infnotechain/services"
+	"github.com/Infnote/infnotechain/utils"
 	"github.com/mr-tron/base58"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"strconv"
 )
 
@@ -16,16 +17,16 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version of Infnote Chain",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Infnote Chain v0.1")
+		fmt.Println("Infnote Chain v0.2")
 		fmt.Println("Protocol v1.1")
 	},
 }
 
-var initCmd = &cobra.Command{
-	Use:   "init",
-	Short: "Create file and set environment for running",
+var ejectCmd = &cobra.Command{
+	Use:   "eject",
+	Short: "Eject default config file for customizing",
 	Run: func(cmd *cobra.Command, args []string) {
-		database.Migrate()
+		utils.Migrate()
 	},
 }
 
@@ -33,7 +34,12 @@ var runCmd = &cobra.Command{
 	Use:   "run",
 	Short: "Start Infnote Chain service",
 	Run: func(cmd *cobra.Command, args []string) {
+		if cmd.Flag("debug").Value.String() == "true" {
+			viper.Set("log.level", "debug")
+		}
+
 		if cmd.Flag("foreground").Value.String() == "true" {
+			utils.SetLoggingMode(utils.STDOUT)
 			go RunManageServer()
 			services.PeerService()
 		} else {
@@ -218,9 +224,14 @@ func initDirectCommands() {
 		"f",
 		false,
 		"Running service and logging in foreground")
+	runCmd.Flags().BoolP(
+		"debug",
+		"d",
+		false,
+		"Running service as debug mode")
 
 	directCmd.AddCommand(versionCmd)
-	directCmd.AddCommand(initCmd)
+	directCmd.AddCommand(ejectCmd)
 	directCmd.AddCommand(runCmd)
 	directCmd.AddCommand(stopCmd)
 	directCmd.AddCommand(cliCmd)
