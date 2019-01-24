@@ -102,7 +102,8 @@ func (*ManageServer) GetPeers(request *manage.PeerRequest, stream manage.IFCMana
 		if err := stream.Send(&manage.PeerResponse{
 			Addr: peer.Addr,
 			Rank: int32(peer.Rank),
-			Last: peer.Last.Unix()}); err != nil {
+			Last: peer.Last.Unix(),
+			Server: peer.IsServer}); err != nil {
 
 			return err
 		}
@@ -208,7 +209,7 @@ func GetPeers(count int32) {
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Address", "Rank", "Duration"})
+	table.SetHeader([]string{"Address", "Rank", "Duration", "Type"})
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -221,9 +222,15 @@ func GetPeers(count int32) {
 
 		duration := "never"
 		if in.Last > 0 {
-			duration = time.Since(time.Unix(in.Last, 0)).String()
+			duration = time.Since(time.Unix(in.Last, 0)).Round(time.Second).String()
 		}
-		table.Append([]string{in.Addr, strconv.Itoa(int(in.Rank)), duration})
+
+		t := "client"
+		if in.Server {
+			t = "server"
+		}
+
+		table.Append([]string{in.Addr, strconv.Itoa(int(in.Rank)), duration, t})
 	}
 	table.Render()
 }

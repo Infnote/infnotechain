@@ -6,9 +6,10 @@ message PeerRequest {
 }
 
 message PeerResponse {
-    string addr = 1;
-    int32  rank = 2;
-    int64  last = 3;
+    string addr   = 1;
+    int32  rank   = 2;
+    int64  last   = 3;
+    bool   server = 4;
 }
 
 message ChainRequest {
