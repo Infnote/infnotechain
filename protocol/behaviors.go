@@ -147,10 +147,10 @@ func (b ResponsePeers) Validate() *Error {
 	for _, v := range b.Peers {
 		addr, err := url.Parse(v)
 		if err != nil {
-			return URLError(err.Error())
+			return InvalidURLError(err.Error())
 		}
 		if addr.Scheme != "ws" && addr.Scheme != "wss" {
-			return URLError("not a websocket URL")
+			return InvalidURLError("not a websocket URL")
 		}
 		processed = append(processed, addr.String())
 	}

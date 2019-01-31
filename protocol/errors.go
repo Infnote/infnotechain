@@ -3,8 +3,8 @@ package protocol
 import "github.com/Infnote/infnotechain/blockchain"
 
 type Error struct {
-	Code string
-	Desc string
+	Code string `json:"code"`
+	Desc string `json:"desc"`
 }
 
 func (e Error) Validate() *Error {
@@ -16,7 +16,7 @@ func (e Error) React() []Behavior {
 }
 
 func InvalidMessageError(err string) *Error {
-	return &Error{"InvalidMessage", err}
+	return &Error{"InvalidMessageError", err}
 }
 
 func InvalidBehaviorError(err string) *Error {
@@ -27,7 +27,7 @@ func IncompatibleProtocolVersionError(err string) *Error {
 	return &Error{"IncompatibleProtocolVersionError", err}
 }
 
-func BadRequestError(err string) *Error  {
+func BadRequestError(err string) *Error {
 	return &Error{"BadRequestError", err}
 }
 
@@ -43,8 +43,8 @@ func BlockValidationError(err blockchain.BlockValidationError) *Error {
 	return &Error{"BlockValidationError", err.Code()}
 }
 
-func URLError(err string) *Error {
-	return &Error{"URLError", err}
+func InvalidURLError(err string) *Error {
+	return &Error{"InvalidURLError", err}
 }
 
 func DuplicateBroadcastError(err string) *Error {

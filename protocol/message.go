@@ -16,7 +16,7 @@ type Serializable interface {
 }
 
 type Message struct {
-	ID   string          `json:"ID"`
+	ID   string          `json:"id"`
 	Type string          `json:"type"`
 	Data json.RawMessage `json:"data"`
 }
@@ -32,7 +32,7 @@ var MessageTypeMap = map[string]reflect.Type{
 }
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var matchAllCap   = regexp.MustCompile("([a-z0-9])([A-Z])")
+var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 func init() {
 	rand.Seed(time.Now().UnixNano())

@@ -108,7 +108,7 @@ var blocksCmd = &cobra.Command{
 		}
 
 		if len(args) < 2 {
-			return errors.New("usage: blocks [chain id] [from] [to]")
+			return errors.New("usage: blocks [from] [to]")
 		}
 
 		from, err := strconv.Atoi(args[0])

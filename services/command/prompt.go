@@ -45,6 +45,7 @@ func Completer(doc prompt.Document) []prompt.Suggest {
 			{Text: "peers", Description: "Print online peers"},
 			{Text: "chains", Description: "Print accepted chains"},
 			{Text: "blocks", Description: "Print blocks"},
+			{Text: "dump", Description: "Print a block with detail"},
 			{Text: "use", Description: "Set chain as current context"},
 			{Text: "createblock", Description: "Create a new block"},
 			{Text: "createchain", Description: "Create a new chain"},
