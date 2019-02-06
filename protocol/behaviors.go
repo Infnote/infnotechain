@@ -48,18 +48,6 @@ type ResponseBlocks struct {
 	blocks []*blockchain.Block
 }
 
-func fixedBytesToString(data [256]byte) string {
-	var result []byte
-	for _, b := range data {
-		if b > 0 {
-			result = append(result, b)
-		} else {
-			break
-		}
-	}
-	return string(result)
-}
-
 // TODO: add support for windows
 // now only can get system info at *nix systems
 func newSysInfo() map[string]string {
@@ -70,11 +58,11 @@ func newSysInfo() map[string]string {
 	}
 
 	return map[string]string{
-		"system":   fixedBytesToString(sysinfo.Sysname),
-		"nodename": fixedBytesToString(sysinfo.Nodename),
-		"release":  fixedBytesToString(sysinfo.Release),
-		"version":  fixedBytesToString(sysinfo.Version),
-		"machine":  fixedBytesToString(sysinfo.Machine),
+		"system":   string(sysinfo.Sysname[:]),
+		"nodename": string(sysinfo.Nodename[:]),
+		"release":  string(sysinfo.Release[:]),
+		"version":  string(sysinfo.Version[:]),
+		"machine":  string(sysinfo.Machine[:]),
 	}
 }
 
