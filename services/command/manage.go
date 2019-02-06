@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Infnote/infnotechain/blockchain"
+	"github.com/Infnote/infnotechain/network"
 	"github.com/Infnote/infnotechain/protocol"
 	"github.com/Infnote/infnotechain/services"
 	"github.com/Infnote/infnotechain/services/codegen"
@@ -34,6 +35,7 @@ type cachedChain struct {
 var IFCManageClient manage.IFCManageClient
 var cachedChains = map[int64]*cachedChain{}
 var chainContext *cachedChain
+var cachedPeers = map[string]bool{}
 
 func RunDaemon() {
 	pid, err := syscall.ForkExec(os.Args[0], []string{os.Args[0], "run", "-f"}, nil)
@@ -93,25 +95,6 @@ func RunManageServer() {
 	if err != nil {
 		utils.L.Fatal(err)
 	}
-}
-
-func (*ManageServer) GetPeers(request *manage.PeerRequest, stream manage.IFCManage_GetPeersServer) error {
-	var count int32
-	for peer := range services.ConnectedPeers {
-		count += 1
-		if err := stream.Send(&manage.PeerResponse{
-			Addr: peer.Addr,
-			Rank: int32(peer.Rank),
-			Last: peer.Last.Unix(),
-			Server: peer.IsServer}); err != nil {
-
-			return err
-		}
-		if count != 0 && count >= request.Count {
-			break
-		}
-	}
-	return nil
 }
 
 func (*ManageServer) GetChains(request *manage.ChainRequest, stream manage.IFCManage_GetChainsServer) error {
@@ -201,15 +184,97 @@ func (*ManageServer) CreateBlock(ctx context.Context, request *manage.BlockCreat
 	}, nil
 }
 
+func (*ManageServer) AddChain(ctx context.Context, request *manage.ChainRequest) (*manage.CommonResponse, error) {
+	blockchain.NewReadonlyChain(request.Id).Sync()
+	return &manage.CommonResponse{Success: true}, nil
+}
+
+func (*ManageServer) DeleteChain(ctx context.Context, request *manage.ChainRequest) (*manage.CommonResponse, error) {
+	if chain := blockchain.LoadChain(request.Id); chain != nil {
+		blockchain.SharedStorage().CleanChain(chain)
+		return &manage.CommonResponse{Success: true}, nil
+	} else {
+		return &manage.CommonResponse{Success: false, Error: "deleting chain is not exist"}, nil
+	}
+}
+
+func (*ManageServer) GetPeers(request *manage.PeerListRequest, stream manage.IFCManage_GetPeersServer) error {
+	peers := network.SharedStorage().GetPeers(int(request.Count))
+	for _, peer := range peers {
+		var response *manage.PeerResponse
+		online := services.SharedServer.Peers[peer.Addr]
+		if online == nil {
+			response = &manage.PeerResponse{
+				Addr:   peer.Addr,
+				Rank:   int32(peer.Rank),
+				Last:   peer.Last.Unix(),
+				Server: peer.IsServer,
+				Online: false}
+		} else {
+			response = &manage.PeerResponse{
+				Addr:   online.Addr,
+				Rank:   int32(online.Rank),
+				Last:   online.Last.Unix(),
+				Server: online.IsServer,
+				Online: true}
+		}
+		if err := stream.Send(response); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (*ManageServer) AddPeer(ctx context.Context, request *manage.PeerRequest) (*manage.CommonResponse, error) {
+	peer := &network.Peer{Addr: request.Addr, Rank: 100}
+	peer.Save()
+	return &manage.CommonResponse{Success: true}, nil
+}
+
+func (*ManageServer) ConnectPeer(ctx context.Context, request *manage.PeerRequest) (*manage.CommonResponse, error) {
+	if peer := services.SharedServer.Peers[request.Addr]; peer != nil {
+		return &manage.CommonResponse{Success: false, Error: "already connected"}, nil
+	}
+	if peer := network.SharedStorage().GetPeer(request.Addr); peer != nil {
+		services.SharedServer.Connect(peer)
+		return &manage.CommonResponse{Success: true}, nil
+	}
+	peer := network.NewPeer(request.Addr, 100)
+	services.SharedServer.Connect(peer)
+	return &manage.CommonResponse{Success: true}, nil
+}
+
+func (*ManageServer) DisconnPeer(ctx context.Context, request *manage.PeerRequest) (*manage.CommonResponse, error) {
+	if peer := services.SharedServer.Peers[request.Addr]; peer != nil {
+		close(peer.Send)
+		return &manage.CommonResponse{Success: true}, nil
+	}
+	return &manage.CommonResponse{Success: false, Error: "peer is not connected"}, nil
+}
+
+func (*ManageServer) DeletePeer(ctx context.Context, request *manage.PeerRequest) (*manage.CommonResponse, error) {
+	if peer := services.SharedServer.Peers[request.Addr]; peer != nil {
+		close(peer.Send)
+		network.SharedStorage().DeletePeer(peer)
+		return &manage.CommonResponse{Success: true}, nil
+	}
+	if peer := network.SharedStorage().GetPeer(request.Addr); peer != nil {
+		network.SharedStorage().DeletePeer(peer)
+		return &manage.CommonResponse{Success: true}, nil
+	}
+	return &manage.CommonResponse{Success: false, Error: "peer is not exist"}, nil
+}
+
 func GetPeers(count int32) {
-	stream, err := IFCManageClient.GetPeers(context.Background(), &manage.PeerRequest{Count: count})
+	stream, err := IFCManageClient.GetPeers(context.Background(), &manage.PeerListRequest{Count: count})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Address", "Rank", "Duration", "Type"})
+	table.SetHeader([]string{"Address", "Rank", "Last/Duration", "Type", "Online?"})
+	cachedPeers = map[string]bool{}
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -220,9 +285,15 @@ func GetPeers(count int32) {
 			return
 		}
 
+		cachedPeers[in.Addr] = in.Online
+
 		duration := "never"
 		if in.Last > 0 {
-			duration = time.Since(time.Unix(in.Last, 0)).Round(time.Second).String()
+			if in.Online {
+				duration = time.Since(time.Unix(in.Last, 0)).Round(time.Second).String()
+			} else {
+				duration = time.Unix(in.Last, 0).String()
+			}
 		}
 
 		t := "client"
@@ -230,7 +301,12 @@ func GetPeers(count int32) {
 			t = "server"
 		}
 
-		table.Append([]string{in.Addr, strconv.Itoa(int(in.Rank)), duration, t})
+		online := ""
+		if in.Online {
+			online = "✓"
+		}
+
+		table.Append([]string{in.Addr, strconv.Itoa(int(in.Rank)), duration, t, online})
 	}
 	table.Render()
 }
@@ -244,6 +320,7 @@ func GetChains(id string) {
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"Ref", "Chain ID", "Block Count"})
+	cachedChains = map[int64]*cachedChain{}
 	for {
 		in, err := stream.Recv()
 		if err == io.EOF {
@@ -372,4 +449,93 @@ func CreateBlock(id string, payload []byte) {
 	fmt.Printf("[PrevHash ] %v\n", response.PrevHash)
 	fmt.Printf("[Hash     ] %v\n", response.Hash)
 	fmt.Printf("[Signature] %v\n", response.Signature)
+}
+
+func AddChain(id string) {
+	response, err := IFCManageClient.AddChain(context.Background(), &manage.ChainRequest{Id: id})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if response.Success {
+		fmt.Println("Added")
+		GetChains(id)
+	} else {
+		fmt.Printf("%v\n", response.Error)
+	}
+}
+
+func DeleteChain(id string) {
+	response, err := IFCManageClient.DeleteChain(context.Background(), &manage.ChainRequest{Id: id})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if response.Success {
+		fmt.Println("Deleted")
+	} else {
+		fmt.Printf("%v\n", response.Error)
+	}
+}
+
+func AddPeer(addr string) {
+	response, err := IFCManageClient.AddPeer(context.Background(), &manage.PeerRequest{Addr: addr})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if response.Success {
+		fmt.Println("Added")
+		cachedPeers[addr] = false
+	} else {
+		fmt.Printf("%v\n", response.Error)
+	}
+}
+
+func ConnectPeer(addr string) {
+	response, err := IFCManageClient.ConnectPeer(context.Background(), &manage.PeerRequest{Addr: addr})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if response.Success {
+		fmt.Println("Connected")
+		cachedPeers[addr] = true
+	} else {
+		fmt.Printf("%v\n", response.Error)
+	}
+}
+
+func DisconnPeer(addr string) {
+	response, err := IFCManageClient.DisconnPeer(context.Background(), &manage.PeerRequest{Addr: addr})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if response.Success {
+		fmt.Println("Disconnected")
+		cachedPeers[addr] = false
+	} else {
+		fmt.Printf("%v\n", response.Error)
+	}
+}
+
+func DeletePeer(addr string) {
+	response, err := IFCManageClient.DeletePeer(context.Background(), &manage.PeerRequest{Addr: addr})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if response.Success {
+		fmt.Println("Deleted")
+		delete(cachedPeers, addr)
+	} else {
+		fmt.Printf("%v\n", response.Error)
+	}
 }

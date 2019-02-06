@@ -24,7 +24,7 @@ var upgrader = websocket.Upgrader{
 
 func NewServer() *Server {
 	return &Server{
-		make(map[string]*Peer),
+		map[string]*Peer{},
 		make(chan *Peer),
 		make(chan *Peer),
 	}

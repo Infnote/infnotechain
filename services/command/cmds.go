@@ -218,6 +218,60 @@ var createBlockCmd = &cobra.Command{
 	},
 }
 
+var addChainCmd = &cobra.Command{
+	Use: "addchain",
+	Short: "add an exist chain",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		AddChain(args[0])
+	},
+}
+
+var delChainCmd = &cobra.Command{
+	Use: "delchain",
+	Short: "delete a chain",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		DeleteChain(args[0])
+	},
+}
+
+var addPeerCmd = &cobra.Command{
+	Use: "addpeer",
+	Short: "add a peer to peer list",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		AddPeer(args[0])
+	},
+}
+
+var delPeerCmd = &cobra.Command{
+	Use: "delpeer",
+	Short: "delete a peer",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		DeletePeer(args[0])
+	},
+}
+
+var connectCmd = &cobra.Command{
+	Use: "connect",
+	Short: "connect to a peer without saving",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		ConnectPeer(args[0])
+	},
+}
+
+var disconnectCmd = &cobra.Command{
+	Use: "disconnect",
+	Short: "disconnect to a peer",
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		DisconnPeer(args[0])
+	},
+}
+
 func initDirectCommands() {
 	runCmd.Flags().BoolP(
 		"foreground",
@@ -251,4 +305,11 @@ func initCLICommands() {
 	cliRootCmd.AddCommand(dumpCmd)
 	cliRootCmd.AddCommand(createChainCmd)
 	cliRootCmd.AddCommand(createBlockCmd)
+	cliRootCmd.AddCommand(addChainCmd)
+	cliRootCmd.AddCommand(delChainCmd)
+	cliRootCmd.AddCommand(delChainCmd)
+	cliRootCmd.AddCommand(addPeerCmd)
+	cliRootCmd.AddCommand(delPeerCmd)
+	cliRootCmd.AddCommand(connectCmd)
+	cliRootCmd.AddCommand(disconnectCmd)
 }

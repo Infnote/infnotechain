@@ -9,6 +9,7 @@ type Storage interface {
 	SaveChain(chain *Chain) error
 	IncreaseCount(chain *Chain)
 	SaveBlock(id int64, block *Block)
+	CleanChain(chain *Chain)
 }
 
 var instance Storage

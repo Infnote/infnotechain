@@ -3,10 +3,11 @@ package command
 import (
 	"fmt"
 	"github.com/Infnote/infnotechain/services/codegen"
-	"github.com/Infnote/infnotechain/utils"
 	"github.com/c-bata/go-prompt"
 	"google.golang.org/grpc"
+	"log"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -16,6 +17,35 @@ func cacheChainSuggest() []prompt.Suggest {
 		s = append(s, prompt.Suggest{
 			Text:        fmt.Sprintf("%v", c.Ref),
 			Description: fmt.Sprintf("ID: %v, Count: %v", c.ID, c.Count)})
+	}
+	return s
+}
+
+func cachePeerSuggest(filter int) []prompt.Suggest {
+	var s []prompt.Suggest
+	var peers []string
+	for peer := range cachedPeers {
+		peers = append(peers, peer)
+	}
+	sort.Strings(peers)
+
+	for _, peer := range peers {
+		online := cachedPeers[peer]
+		if filter == 1 && !online {
+			continue
+		}
+		if filter == 2 && online {
+			continue
+		}
+
+		d := " "
+		if online {
+			d = "✓"
+		}
+		s = append(s, prompt.Suggest{
+			Text:        peer,
+			Description: d,
+		})
 	}
 	return s
 }
@@ -49,6 +79,12 @@ func Completer(doc prompt.Document) []prompt.Suggest {
 			{Text: "use", Description: "Set chain as current context"},
 			{Text: "createblock", Description: "Create a new block"},
 			{Text: "createchain", Description: "Create a new chain"},
+			{Text: "addchain", Description: "Add an exist chain"},
+			{Text: "delchain", Description: "Add an exist chain"},
+			{Text: "addpeer", Description: "Add a peer"},
+			{Text: "delpeer", Description: "Delete a peer"},
+			{Text: "connect", Description: "Connect to a peer without saving"},
+			{Text: "disconnect", Description: "Disconnect to a peer"},
 		}
 		return prompt.FilterContains(s, doc.GetWordBeforeCursor(), true)
 	}
@@ -74,13 +110,25 @@ func Completer(doc prompt.Document) []prompt.Suggest {
 		}
 	}
 
+	if args[0] == "delpeer" {
+		return prompt.FilterContains(cachePeerSuggest(0), doc.GetWordBeforeCursor(), true)
+	}
+
+	if args[0] == "connect" {
+		return prompt.FilterContains(cachePeerSuggest(2), doc.GetWordBeforeCursor(), true)
+	}
+
+	if args[0] == "disconnect" {
+		return prompt.FilterContains(cachePeerSuggest(1), doc.GetWordBeforeCursor(), true)
+	}
+
 	return nil
 }
 
 func connect() {
 	conn, err := grpc.Dial("localhost:32700", grpc.WithInsecure())
 	if err != nil {
-		utils.L.Fatal(err)
+		log.Fatal(err)
 	}
 
 	IFCManageClient = manage.NewIFCManageClient(conn)

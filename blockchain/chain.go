@@ -17,6 +17,7 @@ type Chain struct {
 }
 
 var loadedChains = map[string]*Chain{}
+var BlockSavedHook func(block *Block) = nil
 
 // Create a chain object with genesis block payload
 func CreateChain(payload []byte) *Chain {
@@ -155,6 +156,9 @@ func (c *Chain) SaveBlock(block *Block) bool {
 		SharedStorage().SaveBlock(c.Ref, block)
 		SharedStorage().IncreaseCount(c)
 		utils.L.Debugf("new block saved: %#v", block)
+		if BlockSavedHook != nil {
+			BlockSavedHook(block)
+		}
 		return true
 	}
 	return false

@@ -22,8 +22,55 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type PeerRequest struct {
+type PeerListRequest struct {
 	Count                int32    `protobuf:"varint,1,opt,name=count,proto3" json:"count,omitempty"`
+	Type                 int32    `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PeerListRequest) Reset()         { *m = PeerListRequest{} }
+func (m *PeerListRequest) String() string { return proto.CompactTextString(m) }
+func (*PeerListRequest) ProtoMessage()    {}
+func (*PeerListRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{0}
+}
+
+func (m *PeerListRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PeerListRequest.Unmarshal(m, b)
+}
+func (m *PeerListRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PeerListRequest.Marshal(b, m, deterministic)
+}
+func (m *PeerListRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PeerListRequest.Merge(m, src)
+}
+func (m *PeerListRequest) XXX_Size() int {
+	return xxx_messageInfo_PeerListRequest.Size(m)
+}
+func (m *PeerListRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PeerListRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PeerListRequest proto.InternalMessageInfo
+
+func (m *PeerListRequest) GetCount() int32 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
+}
+
+func (m *PeerListRequest) GetType() int32 {
+	if m != nil {
+		return m.Type
+	}
+	return 0
+}
+
+type PeerRequest struct {
+	Addr                 string   `protobuf:"bytes,1,opt,name=addr,proto3" json:"addr,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -33,7 +80,7 @@ func (m *PeerRequest) Reset()         { *m = PeerRequest{} }
 func (m *PeerRequest) String() string { return proto.CompactTextString(m) }
 func (*PeerRequest) ProtoMessage()    {}
 func (*PeerRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{0}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{1}
 }
 
 func (m *PeerRequest) XXX_Unmarshal(b []byte) error {
@@ -54,11 +101,11 @@ func (m *PeerRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PeerRequest proto.InternalMessageInfo
 
-func (m *PeerRequest) GetCount() int32 {
+func (m *PeerRequest) GetAddr() string {
 	if m != nil {
-		return m.Count
+		return m.Addr
 	}
-	return 0
+	return ""
 }
 
 type PeerResponse struct {
@@ -66,6 +113,7 @@ type PeerResponse struct {
 	Rank                 int32    `protobuf:"varint,2,opt,name=rank,proto3" json:"rank,omitempty"`
 	Last                 int64    `protobuf:"varint,3,opt,name=last,proto3" json:"last,omitempty"`
 	Server               bool     `protobuf:"varint,4,opt,name=server,proto3" json:"server,omitempty"`
+	Online               bool     `protobuf:"varint,5,opt,name=online,proto3" json:"online,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -75,7 +123,7 @@ func (m *PeerResponse) Reset()         { *m = PeerResponse{} }
 func (m *PeerResponse) String() string { return proto.CompactTextString(m) }
 func (*PeerResponse) ProtoMessage()    {}
 func (*PeerResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{1}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{2}
 }
 
 func (m *PeerResponse) XXX_Unmarshal(b []byte) error {
@@ -124,6 +172,13 @@ func (m *PeerResponse) GetServer() bool {
 	return false
 }
 
+func (m *PeerResponse) GetOnline() bool {
+	if m != nil {
+		return m.Online
+	}
+	return false
+}
+
 type ChainRequest struct {
 	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -135,7 +190,7 @@ func (m *ChainRequest) Reset()         { *m = ChainRequest{} }
 func (m *ChainRequest) String() string { return proto.CompactTextString(m) }
 func (*ChainRequest) ProtoMessage()    {}
 func (*ChainRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{2}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{3}
 }
 
 func (m *ChainRequest) XXX_Unmarshal(b []byte) error {
@@ -176,7 +231,7 @@ func (m *ChainResponse) Reset()         { *m = ChainResponse{} }
 func (m *ChainResponse) String() string { return proto.CompactTextString(m) }
 func (*ChainResponse) ProtoMessage()    {}
 func (*ChainResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{3}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{4}
 }
 
 func (m *ChainResponse) XXX_Unmarshal(b []byte) error {
@@ -231,7 +286,7 @@ func (m *BlockRequest) Reset()         { *m = BlockRequest{} }
 func (m *BlockRequest) String() string { return proto.CompactTextString(m) }
 func (*BlockRequest) ProtoMessage()    {}
 func (*BlockRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{4}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{5}
 }
 
 func (m *BlockRequest) XXX_Unmarshal(b []byte) error {
@@ -289,7 +344,7 @@ func (m *BlockResponse) Reset()         { *m = BlockResponse{} }
 func (m *BlockResponse) String() string { return proto.CompactTextString(m) }
 func (*BlockResponse) ProtoMessage()    {}
 func (*BlockResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{5}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{6}
 }
 
 func (m *BlockResponse) XXX_Unmarshal(b []byte) error {
@@ -367,7 +422,7 @@ func (m *ChainCreationRequest) Reset()         { *m = ChainCreationRequest{} }
 func (m *ChainCreationRequest) String() string { return proto.CompactTextString(m) }
 func (*ChainCreationRequest) ProtoMessage()    {}
 func (*ChainCreationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{6}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{7}
 }
 
 func (m *ChainCreationRequest) XXX_Unmarshal(b []byte) error {
@@ -436,7 +491,7 @@ func (m *ChainCreationResponse) Reset()         { *m = ChainCreationResponse{} }
 func (m *ChainCreationResponse) String() string { return proto.CompactTextString(m) }
 func (*ChainCreationResponse) ProtoMessage()    {}
 func (*ChainCreationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{7}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{8}
 }
 
 func (m *ChainCreationResponse) XXX_Unmarshal(b []byte) error {
@@ -490,7 +545,7 @@ func (m *BlockCreationRequest) Reset()         { *m = BlockCreationRequest{} }
 func (m *BlockCreationRequest) String() string { return proto.CompactTextString(m) }
 func (*BlockCreationRequest) ProtoMessage()    {}
 func (*BlockCreationRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{8}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{9}
 }
 
 func (m *BlockCreationRequest) XXX_Unmarshal(b []byte) error {
@@ -540,7 +595,7 @@ func (m *BlockCreationResponse) Reset()         { *m = BlockCreationResponse{} }
 func (m *BlockCreationResponse) String() string { return proto.CompactTextString(m) }
 func (*BlockCreationResponse) ProtoMessage()    {}
 func (*BlockCreationResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_519fa8ed5ffbbc8f, []int{9}
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{10}
 }
 
 func (m *BlockCreationResponse) XXX_Unmarshal(b []byte) error {
@@ -596,7 +651,55 @@ func (m *BlockCreationResponse) GetSignature() string {
 	return ""
 }
 
+type CommonResponse struct {
+	Success              bool     `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	Error                string   `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CommonResponse) Reset()         { *m = CommonResponse{} }
+func (m *CommonResponse) String() string { return proto.CompactTextString(m) }
+func (*CommonResponse) ProtoMessage()    {}
+func (*CommonResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_519fa8ed5ffbbc8f, []int{11}
+}
+
+func (m *CommonResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CommonResponse.Unmarshal(m, b)
+}
+func (m *CommonResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CommonResponse.Marshal(b, m, deterministic)
+}
+func (m *CommonResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CommonResponse.Merge(m, src)
+}
+func (m *CommonResponse) XXX_Size() int {
+	return xxx_messageInfo_CommonResponse.Size(m)
+}
+func (m *CommonResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CommonResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CommonResponse proto.InternalMessageInfo
+
+func (m *CommonResponse) GetSuccess() bool {
+	if m != nil {
+		return m.Success
+	}
+	return false
+}
+
+func (m *CommonResponse) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
+
 func init() {
+	proto.RegisterType((*PeerListRequest)(nil), "manage.PeerListRequest")
 	proto.RegisterType((*PeerRequest)(nil), "manage.PeerRequest")
 	proto.RegisterType((*PeerResponse)(nil), "manage.PeerResponse")
 	proto.RegisterType((*ChainRequest)(nil), "manage.ChainRequest")
@@ -607,45 +710,54 @@ func init() {
 	proto.RegisterType((*ChainCreationResponse)(nil), "manage.ChainCreationResponse")
 	proto.RegisterType((*BlockCreationRequest)(nil), "manage.BlockCreationRequest")
 	proto.RegisterType((*BlockCreationResponse)(nil), "manage.BlockCreationResponse")
+	proto.RegisterType((*CommonResponse)(nil), "manage.CommonResponse")
 }
 
 func init() { proto.RegisterFile("manage.proto", fileDescriptor_519fa8ed5ffbbc8f) }
 
 var fileDescriptor_519fa8ed5ffbbc8f = []byte{
-	// 527 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x54, 0xc1, 0x6e, 0xd3, 0x40,
-	0x10, 0x95, 0x1d, 0x27, 0x24, 0xd3, 0x14, 0x55, 0x4b, 0x52, 0x59, 0x51, 0x41, 0x91, 0xb9, 0xe4,
-	0x54, 0x55, 0x70, 0x40, 0xe2, 0x48, 0x10, 0xa1, 0x05, 0x24, 0xe4, 0x3f, 0xd8, 0xc4, 0x93, 0x78,
-	0xd5, 0xc4, 0x1b, 0x76, 0x37, 0xad, 0xf8, 0x01, 0xee, 0x7c, 0x03, 0xbf, 0xc4, 0x07, 0xa1, 0x19,
-	0xaf, 0x13, 0xc7, 0x6a, 0x25, 0x6e, 0xbd, 0xbd, 0x37, 0xde, 0x79, 0x33, 0xf3, 0x46, 0x63, 0xe8,
-	0x6f, 0x64, 0x21, 0x57, 0x78, 0xb9, 0x35, 0xda, 0x69, 0xd1, 0x29, 0x59, 0xf2, 0x1a, 0x4e, 0xbe,
-	0x23, 0x9a, 0x14, 0x7f, 0xec, 0xd0, 0x3a, 0x31, 0x80, 0xf6, 0x42, 0xef, 0x0a, 0x17, 0x07, 0xe3,
-	0x60, 0xd2, 0x4e, 0x4b, 0x92, 0xcc, 0xa1, 0x5f, 0x3e, 0xb2, 0x5b, 0x5d, 0x58, 0x14, 0x02, 0x22,
-	0x99, 0x65, 0x86, 0x1f, 0xf5, 0x52, 0xc6, 0x14, 0x33, 0xb2, 0xb8, 0x8d, 0x43, 0x4e, 0x64, 0x4c,
-	0xb1, 0xb5, 0xb4, 0x2e, 0x6e, 0x8d, 0x83, 0x49, 0x2b, 0x65, 0x2c, 0xce, 0xa1, 0x63, 0xd1, 0xdc,
-	0xa1, 0x89, 0xa3, 0x71, 0x30, 0xe9, 0xa6, 0x9e, 0x25, 0xaf, 0xa0, 0x3f, 0xcd, 0xa5, 0x2a, 0xaa,
-	0x4e, 0x9e, 0x43, 0xa8, 0x32, 0x5f, 0x21, 0x54, 0x59, 0x32, 0x83, 0x53, 0xff, 0xdd, 0x37, 0x71,
-	0x06, 0x2d, 0x83, 0x4b, 0x7e, 0xd1, 0x4a, 0x09, 0xfa, 0x94, 0xb0, 0x4a, 0x39, 0x0c, 0x43, 0xf5,
-	0xa3, 0x6a, 0x98, 0xaf, 0xd0, 0xff, 0xb0, 0xd6, 0x8b, 0xdb, 0xaa, 0x50, 0x0c, 0xcf, 0x16, 0x24,
-	0x7c, 0xfd, 0xd1, 0x57, 0xab, 0x28, 0xb5, 0xbf, 0x34, 0x7a, 0xc3, 0x8a, 0x51, 0xca, 0x98, 0x6a,
-	0x38, 0xed, 0x05, 0x43, 0xa7, 0x93, 0x3f, 0x01, 0x9c, 0x7a, 0x39, 0xdf, 0xd7, 0x39, 0x74, 0x72,
-	0x54, 0xab, 0xbc, 0xf4, 0x30, 0x4a, 0x3d, 0x23, 0x35, 0xa7, 0x36, 0x58, 0xa9, 0x11, 0x16, 0x23,
-	0xe8, 0x6e, 0x0d, 0xde, 0x7d, 0x96, 0x36, 0x67, 0xcd, 0x5e, 0xba, 0xe7, 0xf4, 0x3e, 0xa7, 0x78,
-	0x54, 0x9a, 0x4c, 0x58, 0x5c, 0x40, 0xcf, 0xaa, 0x55, 0x21, 0xdd, 0xce, 0x60, 0xdc, 0xe6, 0x0f,
-	0x87, 0x00, 0x4d, 0xb2, 0x95, 0x3f, 0xd7, 0x5a, 0x66, 0x71, 0x67, 0x1c, 0x4c, 0xfa, 0x69, 0x45,
-	0x93, 0x5f, 0x01, 0x0c, 0xd8, 0xbd, 0xa9, 0x41, 0xe9, 0x94, 0xde, 0xbb, 0x2c, 0x20, 0x2a, 0xe4,
-	0x06, 0xab, 0x4d, 0x12, 0xa6, 0x01, 0xe4, 0xce, 0xe5, 0xda, 0x78, 0x2b, 0x3d, 0x23, 0xf9, 0x7b,
-	0x9c, 0x5b, 0xe5, 0xd0, 0xf7, 0x5a, 0x51, 0x32, 0x1a, 0x37, 0x52, 0xad, 0x7d, 0xaf, 0x25, 0x21,
-	0xed, 0x0c, 0xed, 0xc2, 0xf7, 0xc9, 0x38, 0xf9, 0x02, 0xc3, 0x46, 0x1f, 0xff, 0xbd, 0xcd, 0x33,
-	0x68, 0xdd, 0xab, 0xa5, 0x2f, 0x4d, 0x30, 0xb9, 0x81, 0x01, 0x5b, 0xdf, 0x1c, 0xea, 0xf1, 0x8d,
-	0xd6, 0x1c, 0x0a, 0x8f, 0x1d, 0xfa, 0x1d, 0xc0, 0xb0, 0x21, 0xf6, 0xd4, 0xfb, 0x7c, 0xf3, 0x37,
-	0x84, 0xde, 0xf5, 0xa7, 0xe9, 0x37, 0xbe, 0x54, 0xf1, 0x0e, 0xba, 0x33, 0x74, 0x74, 0x87, 0x56,
-	0xbc, 0xb8, 0xf4, 0xc7, 0x5c, 0xbb, 0xdd, 0xd1, 0xe0, 0x38, 0x58, 0xb6, 0x7f, 0x15, 0x88, 0xf7,
-	0xd0, 0x9b, 0xa1, 0x63, 0xdb, 0xad, 0xd8, 0x3f, 0xaa, 0x1f, 0xdb, 0x68, 0xd8, 0x88, 0x36, 0x72,
-	0xd9, 0x98, 0x5a, 0x6e, 0xfd, 0x7e, 0x0e, 0xb9, 0x47, 0x67, 0x70, 0x15, 0x88, 0x1b, 0x38, 0x61,
-	0x33, 0x91, 0x45, 0xc5, 0xc5, 0x51, 0x8d, 0xc6, 0xce, 0x46, 0x2f, 0x1f, 0xf9, 0xea, 0x97, 0xb0,
-	0xd7, 0xe2, 0x22, 0x07, 0xad, 0x87, 0xf6, 0x7f, 0xd0, 0x7a, 0x70, 0xa1, 0xf3, 0x0e, 0xff, 0x01,
-	0xdf, 0xfe, 0x0b, 0x00, 0x00, 0xff, 0xff, 0x00, 0x63, 0x23, 0x3a, 0x11, 0x05, 0x00, 0x00,
+	// 652 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0xdd, 0x6e, 0x13, 0x3d,
+	0x10, 0xd5, 0x26, 0x9b, 0x34, 0x99, 0xa4, 0xfd, 0x2a, 0x7f, 0x69, 0x59, 0x45, 0x05, 0x85, 0xbd,
+	0xca, 0x55, 0x55, 0x81, 0x84, 0xa0, 0xbd, 0xa1, 0xa4, 0xa2, 0xb4, 0x14, 0x09, 0xed, 0x1b, 0xb8,
+	0xbb, 0xd3, 0xc6, 0x6a, 0xd6, 0x0e, 0xb6, 0xd3, 0xaa, 0x3c, 0x00, 0xf7, 0x3c, 0x03, 0x6f, 0xc1,
+	0xd3, 0x21, 0xff, 0x25, 0x9b, 0x28, 0x45, 0x94, 0x1b, 0xee, 0xe6, 0xcc, 0xce, 0x39, 0x33, 0x3e,
+	0x13, 0x3b, 0xd0, 0x2d, 0x29, 0xa7, 0xd7, 0xb8, 0x3f, 0x95, 0x42, 0x0b, 0xd2, 0x74, 0x28, 0x3d,
+	0x82, 0xff, 0x3e, 0x23, 0xca, 0x0b, 0xa6, 0x74, 0x86, 0x5f, 0x66, 0xa8, 0x34, 0xe9, 0x41, 0x23,
+	0x17, 0x33, 0xae, 0x93, 0x68, 0x10, 0x0d, 0x1b, 0x99, 0x03, 0x84, 0x40, 0xac, 0xef, 0xa7, 0x98,
+	0xd4, 0x6c, 0xd2, 0xc6, 0xe9, 0x73, 0xe8, 0x18, 0x72, 0x20, 0x12, 0x88, 0x69, 0x51, 0x48, 0xcb,
+	0x6b, 0x67, 0x36, 0x4e, 0xbf, 0x42, 0xd7, 0x95, 0xa8, 0xa9, 0xe0, 0x0a, 0xd7, 0xd5, 0x98, 0x9c,
+	0xa4, 0xfc, 0x26, 0x48, 0x9b, 0xd8, 0xe4, 0x26, 0x54, 0xe9, 0xa4, 0x3e, 0x88, 0x86, 0xf5, 0xcc,
+	0xc6, 0x64, 0x17, 0x9a, 0x0a, 0xe5, 0x2d, 0xca, 0x24, 0x1e, 0x44, 0xc3, 0x56, 0xe6, 0x91, 0xc9,
+	0x0b, 0x3e, 0x61, 0x1c, 0x93, 0x86, 0xcb, 0x3b, 0x94, 0x3e, 0x83, 0xee, 0x68, 0x4c, 0x19, 0x0f,
+	0xf3, 0x6d, 0x41, 0x8d, 0x15, 0xbe, 0x73, 0x8d, 0x15, 0xe9, 0x29, 0x6c, 0xfa, 0xef, 0x7e, 0xb8,
+	0x6d, 0xa8, 0x4b, 0xbc, 0xb2, 0x15, 0xf5, 0xcc, 0x84, 0x9e, 0x52, 0x0b, 0x94, 0x85, 0x37, 0x66,
+	0xae, 0xd8, 0x7b, 0x93, 0x5e, 0x40, 0xf7, 0xdd, 0x44, 0xe4, 0x37, 0xa1, 0x51, 0x02, 0x1b, 0xb9,
+	0x11, 0x3e, 0x3b, 0xf1, 0xdd, 0x02, 0x34, 0xc7, 0xba, 0x92, 0xa2, 0xb4, 0x8a, 0x71, 0x66, 0x63,
+	0xd3, 0x43, 0x0b, 0x2f, 0x58, 0xd3, 0x22, 0xfd, 0x11, 0xc1, 0xa6, 0x97, 0xf3, 0x73, 0xed, 0x42,
+	0x73, 0x8c, 0xec, 0x7a, 0xec, 0x56, 0x12, 0x67, 0x1e, 0xd9, 0x9d, 0xb0, 0x12, 0x83, 0x9a, 0x89,
+	0x49, 0x1f, 0x5a, 0x53, 0x89, 0xb7, 0x1f, 0xa8, 0x1a, 0x5b, 0xcd, 0x76, 0x36, 0xc7, 0xa6, 0x7e,
+	0x6c, 0xf2, 0xb1, 0x33, 0xdf, 0xc4, 0x64, 0x0f, 0xda, 0x8a, 0x5d, 0x73, 0xaa, 0x67, 0xd2, 0xf9,
+	0xd7, 0xce, 0x16, 0x09, 0x73, 0x92, 0x29, 0xbd, 0x9f, 0x08, 0x5a, 0x24, 0xcd, 0x41, 0x34, 0xec,
+	0x66, 0x01, 0xa6, 0xdf, 0x22, 0xe8, 0x59, 0xf7, 0x46, 0x12, 0xa9, 0x66, 0x82, 0x57, 0x7e, 0x05,
+	0x9c, 0x96, 0x18, 0x36, 0x6c, 0x62, 0x73, 0x00, 0x3a, 0xd3, 0x63, 0x21, 0xbd, 0x95, 0x1e, 0x19,
+	0xf9, 0x3b, 0xbc, 0x54, 0x4c, 0xa3, 0x9f, 0x35, 0x40, 0x63, 0x34, 0x96, 0x94, 0x4d, 0xfc, 0xac,
+	0x0e, 0x18, 0xed, 0x02, 0x55, 0xee, 0xe7, 0xb4, 0x71, 0xfa, 0x11, 0x76, 0x56, 0xe6, 0xf8, 0xe3,
+	0x6d, 0x6e, 0x43, 0xfd, 0x8e, 0x5d, 0xf9, 0xd6, 0x26, 0x4c, 0xcf, 0xa1, 0x67, 0xad, 0x5f, 0x3d,
+	0xd4, 0xc3, 0x1b, 0xad, 0x38, 0x54, 0x5b, 0x76, 0xe8, 0x7b, 0x04, 0x3b, 0x2b, 0x62, 0xff, 0x7a,
+	0x9f, 0xe9, 0x5b, 0xd8, 0x1a, 0x89, 0xb2, 0xac, 0xcc, 0x92, 0xc0, 0x86, 0x9a, 0xe5, 0x39, 0x2a,
+	0x65, 0x87, 0x69, 0x65, 0x01, 0xda, 0x15, 0x48, 0x39, 0xdf, 0x99, 0x03, 0x2f, 0x7e, 0x36, 0xa0,
+	0x7d, 0xf6, 0x7e, 0xf4, 0xc9, 0x3e, 0x1f, 0xe4, 0x10, 0xda, 0xa7, 0xa8, 0xad, 0xff, 0x8a, 0xf4,
+	0xf6, 0xfd, 0x13, 0x53, 0xbd, 0x75, 0xfd, 0x9d, 0x95, 0xac, 0xeb, 0x7b, 0x10, 0x79, 0xae, 0x75,
+	0xa8, 0xc2, 0xad, 0x5e, 0xa4, 0x05, 0x77, 0xe9, 0x3e, 0x1c, 0x44, 0xe4, 0x1c, 0x3a, 0xd6, 0x55,
+	0xb4, 0xa2, 0x64, 0x6f, 0xa9, 0xc7, 0xca, 0xf2, 0xfa, 0x4f, 0x1f, 0xf8, 0xea, 0x1d, 0x98, 0x6b,
+	0xd9, 0x26, 0x0b, 0xad, 0x75, 0x3f, 0x84, 0x85, 0xd6, 0xfa, 0xcd, 0xbe, 0x86, 0xd6, 0x71, 0x51,
+	0xb8, 0xa1, 0xd6, 0xdb, 0xb1, 0x3b, 0xcf, 0x2e, 0xef, 0xe1, 0x08, 0x3a, 0x27, 0x38, 0xc1, 0x70,
+	0xa2, 0xc7, 0x92, 0x5b, 0xa7, 0xa8, 0xcd, 0x43, 0xab, 0xc8, 0x93, 0x50, 0xb3, 0xf2, 0xae, 0xf7,
+	0x7b, 0xd5, 0x0f, 0x15, 0x2f, 0x5f, 0xc1, 0xc6, 0x71, 0x51, 0x98, 0x24, 0xf9, 0x7f, 0xb9, 0xe4,
+	0xf7, 0x4d, 0x0f, 0xa1, 0x33, 0x12, 0x9c, 0x63, 0xae, 0xff, 0x8a, 0x7b, 0xc2, 0x54, 0x2e, 0x38,
+	0x7f, 0x3c, 0xf7, 0x0d, 0x80, 0x73, 0xea, 0xd1, 0xd4, 0xcb, 0xa6, 0xfd, 0xf3, 0x7b, 0xf9, 0x2b,
+	0x00, 0x00, 0xff, 0xff, 0x30, 0x2b, 0x60, 0xd0, 0x0c, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -660,11 +772,17 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type IFCManageClient interface {
-	GetPeers(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (IFCManage_GetPeersClient, error)
 	GetChains(ctx context.Context, in *ChainRequest, opts ...grpc.CallOption) (IFCManage_GetChainsClient, error)
 	GetBlocks(ctx context.Context, in *BlockRequest, opts ...grpc.CallOption) (IFCManage_GetBlocksClient, error)
 	CreateChain(ctx context.Context, in *ChainCreationRequest, opts ...grpc.CallOption) (*ChainCreationResponse, error)
 	CreateBlock(ctx context.Context, in *BlockCreationRequest, opts ...grpc.CallOption) (*BlockCreationResponse, error)
+	AddChain(ctx context.Context, in *ChainRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	DeleteChain(ctx context.Context, in *ChainRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	GetPeers(ctx context.Context, in *PeerListRequest, opts ...grpc.CallOption) (IFCManage_GetPeersClient, error)
+	AddPeer(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	ConnectPeer(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	DisconnPeer(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
+	DeletePeer(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (*CommonResponse, error)
 }
 
 type iFCManageClient struct {
@@ -675,40 +793,8 @@ func NewIFCManageClient(cc *grpc.ClientConn) IFCManageClient {
 	return &iFCManageClient{cc}
 }
 
-func (c *iFCManageClient) GetPeers(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (IFCManage_GetPeersClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_IFCManage_serviceDesc.Streams[0], "/manage.IFCManage/GetPeers", opts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &iFCManageGetPeersClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type IFCManage_GetPeersClient interface {
-	Recv() (*PeerResponse, error)
-	grpc.ClientStream
-}
-
-type iFCManageGetPeersClient struct {
-	grpc.ClientStream
-}
-
-func (x *iFCManageGetPeersClient) Recv() (*PeerResponse, error) {
-	m := new(PeerResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
-}
-
 func (c *iFCManageClient) GetChains(ctx context.Context, in *ChainRequest, opts ...grpc.CallOption) (IFCManage_GetChainsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_IFCManage_serviceDesc.Streams[1], "/manage.IFCManage/GetChains", opts...)
+	stream, err := c.cc.NewStream(ctx, &_IFCManage_serviceDesc.Streams[0], "/manage.IFCManage/GetChains", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -740,7 +826,7 @@ func (x *iFCManageGetChainsClient) Recv() (*ChainResponse, error) {
 }
 
 func (c *iFCManageClient) GetBlocks(ctx context.Context, in *BlockRequest, opts ...grpc.CallOption) (IFCManage_GetBlocksClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_IFCManage_serviceDesc.Streams[2], "/manage.IFCManage/GetBlocks", opts...)
+	stream, err := c.cc.NewStream(ctx, &_IFCManage_serviceDesc.Streams[1], "/manage.IFCManage/GetBlocks", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -789,38 +875,109 @@ func (c *iFCManageClient) CreateBlock(ctx context.Context, in *BlockCreationRequ
 	return out, nil
 }
 
+func (c *iFCManageClient) AddChain(ctx context.Context, in *ChainRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, "/manage.IFCManage/AddChain", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iFCManageClient) DeleteChain(ctx context.Context, in *ChainRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, "/manage.IFCManage/DeleteChain", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iFCManageClient) GetPeers(ctx context.Context, in *PeerListRequest, opts ...grpc.CallOption) (IFCManage_GetPeersClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_IFCManage_serviceDesc.Streams[2], "/manage.IFCManage/GetPeers", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &iFCManageGetPeersClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type IFCManage_GetPeersClient interface {
+	Recv() (*PeerResponse, error)
+	grpc.ClientStream
+}
+
+type iFCManageGetPeersClient struct {
+	grpc.ClientStream
+}
+
+func (x *iFCManageGetPeersClient) Recv() (*PeerResponse, error) {
+	m := new(PeerResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *iFCManageClient) AddPeer(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, "/manage.IFCManage/AddPeer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iFCManageClient) ConnectPeer(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, "/manage.IFCManage/ConnectPeer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iFCManageClient) DisconnPeer(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, "/manage.IFCManage/DisconnPeer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iFCManageClient) DeletePeer(ctx context.Context, in *PeerRequest, opts ...grpc.CallOption) (*CommonResponse, error) {
+	out := new(CommonResponse)
+	err := c.cc.Invoke(ctx, "/manage.IFCManage/DeletePeer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IFCManageServer is the server API for IFCManage service.
 type IFCManageServer interface {
-	GetPeers(*PeerRequest, IFCManage_GetPeersServer) error
 	GetChains(*ChainRequest, IFCManage_GetChainsServer) error
 	GetBlocks(*BlockRequest, IFCManage_GetBlocksServer) error
 	CreateChain(context.Context, *ChainCreationRequest) (*ChainCreationResponse, error)
 	CreateBlock(context.Context, *BlockCreationRequest) (*BlockCreationResponse, error)
+	AddChain(context.Context, *ChainRequest) (*CommonResponse, error)
+	DeleteChain(context.Context, *ChainRequest) (*CommonResponse, error)
+	GetPeers(*PeerListRequest, IFCManage_GetPeersServer) error
+	AddPeer(context.Context, *PeerRequest) (*CommonResponse, error)
+	ConnectPeer(context.Context, *PeerRequest) (*CommonResponse, error)
+	DisconnPeer(context.Context, *PeerRequest) (*CommonResponse, error)
+	DeletePeer(context.Context, *PeerRequest) (*CommonResponse, error)
 }
 
 func RegisterIFCManageServer(s *grpc.Server, srv IFCManageServer) {
 	s.RegisterService(&_IFCManage_serviceDesc, srv)
-}
-
-func _IFCManage_GetPeers_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(PeerRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(IFCManageServer).GetPeers(m, &iFCManageGetPeersServer{stream})
-}
-
-type IFCManage_GetPeersServer interface {
-	Send(*PeerResponse) error
-	grpc.ServerStream
-}
-
-type iFCManageGetPeersServer struct {
-	grpc.ServerStream
-}
-
-func (x *iFCManageGetPeersServer) Send(m *PeerResponse) error {
-	return x.ServerStream.SendMsg(m)
 }
 
 func _IFCManage_GetChains_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -901,6 +1058,135 @@ func _IFCManage_CreateBlock_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _IFCManage_AddChain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChainRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IFCManageServer).AddChain(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/manage.IFCManage/AddChain",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IFCManageServer).AddChain(ctx, req.(*ChainRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IFCManage_DeleteChain_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChainRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IFCManageServer).DeleteChain(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/manage.IFCManage/DeleteChain",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IFCManageServer).DeleteChain(ctx, req.(*ChainRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IFCManage_GetPeers_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(PeerListRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(IFCManageServer).GetPeers(m, &iFCManageGetPeersServer{stream})
+}
+
+type IFCManage_GetPeersServer interface {
+	Send(*PeerResponse) error
+	grpc.ServerStream
+}
+
+type iFCManageGetPeersServer struct {
+	grpc.ServerStream
+}
+
+func (x *iFCManageGetPeersServer) Send(m *PeerResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _IFCManage_AddPeer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PeerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IFCManageServer).AddPeer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/manage.IFCManage/AddPeer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IFCManageServer).AddPeer(ctx, req.(*PeerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IFCManage_ConnectPeer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PeerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IFCManageServer).ConnectPeer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/manage.IFCManage/ConnectPeer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IFCManageServer).ConnectPeer(ctx, req.(*PeerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IFCManage_DisconnPeer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PeerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IFCManageServer).DisconnPeer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/manage.IFCManage/DisconnPeer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IFCManageServer).DisconnPeer(ctx, req.(*PeerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IFCManage_DeletePeer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PeerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IFCManageServer).DeletePeer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/manage.IFCManage/DeletePeer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IFCManageServer).DeletePeer(ctx, req.(*PeerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _IFCManage_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "manage.IFCManage",
 	HandlerType: (*IFCManageServer)(nil),
@@ -913,13 +1199,32 @@ var _IFCManage_serviceDesc = grpc.ServiceDesc{
 			MethodName: "CreateBlock",
 			Handler:    _IFCManage_CreateBlock_Handler,
 		},
+		{
+			MethodName: "AddChain",
+			Handler:    _IFCManage_AddChain_Handler,
+		},
+		{
+			MethodName: "DeleteChain",
+			Handler:    _IFCManage_DeleteChain_Handler,
+		},
+		{
+			MethodName: "AddPeer",
+			Handler:    _IFCManage_AddPeer_Handler,
+		},
+		{
+			MethodName: "ConnectPeer",
+			Handler:    _IFCManage_ConnectPeer_Handler,
+		},
+		{
+			MethodName: "DisconnPeer",
+			Handler:    _IFCManage_DisconnPeer_Handler,
+		},
+		{
+			MethodName: "DeletePeer",
+			Handler:    _IFCManage_DeletePeer_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
-		{
-			StreamName:    "GetPeers",
-			Handler:       _IFCManage_GetPeers_Handler,
-			ServerStreams: true,
-		},
 		{
 			StreamName:    "GetChains",
 			Handler:       _IFCManage_GetChains_Handler,
@@ -928,6 +1233,11 @@ var _IFCManage_serviceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "GetBlocks",
 			Handler:       _IFCManage_GetBlocks_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetPeers",
+			Handler:       _IFCManage_GetPeers_Handler,
 			ServerStreams: true,
 		},
 	},

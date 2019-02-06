@@ -21,9 +21,10 @@ type Peer struct {
 
 type Storage interface {
 	CountOfPeers() int
-	GetAllPeers() []*Peer
+	GetPeer(addr string) *Peer
 	GetPeers(count int) []*Peer
 	SavePeer(peer *Peer)
+	DeletePeer(peer *Peer)
 }
 
 // 2 MB
@@ -50,6 +51,7 @@ func NewPeer(addr string, rank int) *Peer {
 }
 
 func (c *Peer) Save() {
+	// TODO: validate address
 	instance.SavePeer(c)
 }
 
@@ -68,7 +70,7 @@ func (c *Peer) read() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				utils.L.Debugf("connection closed unexpectedly: %v", err)
 			}
-			close(c.Send)
+			safeClose(c.Send)
 			return
 		}
 		c.Recv <- data
@@ -97,6 +99,13 @@ func (c *Peer) write() {
 			_ = w.Close()
 		}
 	}
+}
+
+func safeClose(c chan []byte) {
+	defer func() {
+		recover()
+	}()
+	close(c)
 }
 
 func inbound(server *Server, w http.ResponseWriter, r *http.Request) {

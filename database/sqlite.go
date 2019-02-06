@@ -211,20 +211,28 @@ func (s SQLiteDriver) scanPeers(rows *sql.Rows) []*network.Peer {
 	return peers
 }
 
-func (s SQLiteDriver) GetAllPeers() []*network.Peer {
-	query := `SELECT addr, rank, last FROM peers ORDER BY rank`
-
-	rows, err := s.db.Query(query)
+func (s SQLiteDriver) GetPeer(addr string) *network.Peer {
+	query := `SELECT addr, rank, last FROM peers WHERE addr = ?`
+	rows, err := s.db.Query(query, addr)
 	if err != nil {
 		utils.L.Fatal(err)
 	}
 	defer func() { _ = rows.Close() }()
 
-	return s.scanPeers(rows)
+	peers := s.scanPeers(rows)
+	if len(peers) > 0 {
+		return peers[0]
+	}
+	return nil
 }
 
 func (s SQLiteDriver) GetPeers(count int) []*network.Peer {
-	query := `SELECT addr, rank, last FROM peers ORDER BY rank LIMIT ?`
+	var query string
+	if count == 0 {
+		query = `SELECT addr, rank, last FROM peers ORDER BY rank`
+	} else {
+		query = `SELECT addr, rank, last FROM peers ORDER BY rank LIMIT ?`
+	}
 
 	rows, err := s.db.Query(query, count)
 	if err != nil {
@@ -245,6 +253,30 @@ func (s SQLiteDriver) SavePeer(peer *network.Peer) {
 	}
 }
 
+func (s SQLiteDriver) DeletePeer(peer *network.Peer) {
+	query := `DELETE FROM peers WHERE addr = ?`
+	_, err := s.db.Exec(query, peer.Addr)
+	if err != nil {
+		utils.L.Warning("failed to delete a peer, %v", err)
+	}
+}
+
+func (s SQLiteDriver) CleanChain(chain *blockchain.Chain) {
+	query := `DELETE FROM chains WHERE id = ?`
+
+	_, err := s.db.Exec(query, chain.ID)
+	if err != nil {
+		utils.L.Warning("failed to delete a chain")
+	}
+
+	query = `DELETE FROM blocks WHERE chain_id = ?`
+
+	_, err = s.db.Exec(query, chain.Ref)
+	if err != nil {
+		utils.L.Warning("failed to delete blocks of chain %v", chain.ID)
+	}
+}
+
 func sqliteMigrate() {
 	file := viper.GetString("data.file")
 	_, err := os.Stat(file)
@@ -253,6 +285,7 @@ func sqliteMigrate() {
 	if err == nil {
 		return
 	}
+
 	// cannot process if file with errors which is not "not exist"
 	if !os.IsNotExist(err) {
 		utils.L.Error("%v", err)

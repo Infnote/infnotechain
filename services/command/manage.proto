@@ -1,8 +1,13 @@
 syntax = "proto3";
 package manage;
 
-message PeerRequest {
+message PeerListRequest {
     int32 count = 1;
+    int32 type  = 2; // 0 - all, 1 - online, 2 - offline
+}
+
+message PeerRequest {
+    string addr = 1;
 }
 
 message PeerResponse {
@@ -10,6 +15,7 @@ message PeerResponse {
     int32  rank   = 2;
     int64  last   = 3;
     bool   server = 4;
+    bool   online = 5;
 }
 
 message ChainRequest {
@@ -64,10 +70,23 @@ message BlockCreationResponse {
     string signature = 5;
 }
 
+message CommonResponse {
+    bool success = 1;
+    string error = 2;
+}
+
 service IFCManage {
-    rpc GetPeers   (PeerRequest)           returns (stream PeerResponse);
-    rpc GetChains  (ChainRequest)          returns (stream ChainResponse);
-    rpc GetBlocks  (BlockRequest)          returns (stream BlockResponse);
+    rpc GetChains   (ChainRequest)         returns (stream ChainResponse);
+    rpc GetBlocks   (BlockRequest)         returns (stream BlockResponse);
     rpc CreateChain (ChainCreationRequest) returns (ChainCreationResponse);
     rpc CreateBlock (BlockCreationRequest) returns (BlockCreationResponse);
+
+    rpc AddChain    (ChainRequest)         returns (CommonResponse);
+    rpc DeleteChain (ChainRequest)         returns (CommonResponse);
+
+    rpc GetPeers    (PeerListRequest)      returns (stream PeerResponse);
+    rpc AddPeer     (PeerRequest)          returns (CommonResponse);
+    rpc ConnectPeer (PeerRequest)          returns (CommonResponse);
+    rpc DisconnPeer (PeerRequest)          returns (CommonResponse);
+    rpc DeletePeer  (PeerRequest)          returns (CommonResponse);
 }
