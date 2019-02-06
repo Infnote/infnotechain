@@ -38,7 +38,15 @@ var chainContext *cachedChain
 var cachedPeers = map[string]bool{}
 
 func RunDaemon() {
-	pid, err := syscall.ForkExec(os.Args[0], []string{os.Args[0], "run", "-f"}, nil)
+	path := os.Args[0]
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		path = "/usr/local/bin/" + path
+	}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		utils.L.Fatal("please put the executable file into /usr/local/bin/")
+	}
+
+	pid, err := syscall.ForkExec(path, []string{path, "run", "-f"}, nil)
 	if err != nil {
 		utils.L.Fatal(err)
 	}
