@@ -7,6 +7,10 @@ import (
 )
 
 func init() {
+	if err := os.MkdirAll("/usr/local/var/infnote", 0755); err != nil {
+		L.Fatal(err)
+	}
+
 	viper.SetDefault("server.host", "0.0.0.0")
 	viper.SetDefault("server.port", 32767)
 	viper.SetDefault("manage.host", "127.0.0.1")
