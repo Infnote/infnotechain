@@ -46,7 +46,7 @@ func RunDaemon() {
 		utils.L.Fatal("please put the executable file into /usr/local/bin/")
 	}
 
-	pid, err := syscall.ForkExec(path, []string{path, "run", "-f"}, nil)
+	pid, err := syscall.ForkExec(path, []string{path, "run", "-fF"}, nil)
 	if err != nil {
 		utils.L.Fatal(err)
 	}
@@ -56,7 +56,6 @@ func RunDaemon() {
 		utils.L.Fatal(err)
 	}
 	fmt.Printf("Infnote Chain service start in child process %v\n", pid)
-	utils.SetLoggingMode(utils.FILE)
 }
 
 func StopDaemon() {

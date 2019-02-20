@@ -38,8 +38,13 @@ var runCmd = &cobra.Command{
 			viper.Set("log.level", "debug")
 		}
 
-		if cmd.Flag("foreground").Value.String() == "true" {
+		if cmd.Flag("filelog").Value.String() == "true" {
+			utils.SetLoggingMode(utils.FILE)
+		} else {
 			utils.SetLoggingMode(utils.STDOUT)
+		}
+
+		if cmd.Flag("foreground").Value.String() == "true" {
 			go RunManageServer()
 			services.PeerService()
 		} else {
@@ -283,6 +288,11 @@ func initDirectCommands() {
 		"d",
 		false,
 		"Running service as debug mode")
+	runCmd.Flags().BoolP(
+		"filelog",
+		"F",
+		false,
+		"Log to file")
 
 	directCmd.AddCommand(versionCmd)
 	directCmd.AddCommand(ejectCmd)

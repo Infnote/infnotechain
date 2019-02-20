@@ -52,7 +52,7 @@ func SetLoggingMode(mode int) {
 		log.Fatal(err)
 	}
 	fileFormatter := logging.MustStringFormatter(
-		`[%{time:15:04:05.000}][%{longfunc}][%{level:.4s}] %{message}`)
+		`[%{time:2006-01-02 15:04:05.000}][%{longfunc}][%{level:.4s}] %{message}`)
 	fout = logging.AddModuleLevel(
 		logging.NewBackendFormatter(
 			logging.NewLogBackend(file, "", 0), fileFormatter))
@@ -61,7 +61,7 @@ func SetLoggingMode(mode int) {
 	fout.SetLevel(l, "")
 
 	var backends []logging.Backend
-	if mode&STDOUT == STDOUT {
+	if mode&STDOUT > 0 {
 		backends = append(backends, stdout)
 	}
 
