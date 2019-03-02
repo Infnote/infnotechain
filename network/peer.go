@@ -111,7 +111,8 @@ func safeClose(c chan []byte) {
 func inbound(server *Server, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		utils.L.Fatal(err)
+		utils.L.Warning("%v", err)
+		return
 	}
 
 	peer := NewPeer(conn.RemoteAddr().String(), 100)
