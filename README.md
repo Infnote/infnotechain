@@ -1,6 +1,8 @@
 # Infnote Chain ![Go Version](https://img.shields.io/badge/go-1.11.4-green.svg)
 
-### Installation
+
+
+## Installation
 
 Get the repo and build:
 
@@ -14,7 +16,7 @@ ifc run
 
 Don't forget to set `GOPATH` correctly and add `/usr/local/bin` to your `PATH` variable
 
-### How to Use
+## How to Use
 
 - `ifc run -f` run the program at foreground
 - `ifc run -d` run the program with debug level log
@@ -22,7 +24,7 @@ Don't forget to set `GOPATH` correctly and add `/usr/local/bin` to your `PATH` v
 - `ifc eject` eject config file to `/usr/local/etc/infnote/config.yaml`
 - `ifc cli` run an interactive command line tool
 
-### TODO:
+## TODO:
 
 - [ ] Writing test
 - [ ] Check if peer connection is still alive by send a info 
