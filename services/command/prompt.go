@@ -85,6 +85,7 @@ func Completer(doc prompt.Document) []prompt.Suggest {
 			{Text: "delpeer", Description: "Delete a peer"},
 			{Text: "connect", Description: "Connect to a peer without saving"},
 			{Text: "disconnect", Description: "Disconnect to a peer"},
+			{Text: "exit", Description: "Quit the program"},
 		}
 		return prompt.FilterContains(s, doc.GetWordBeforeCursor(), true)
 	}

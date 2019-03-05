@@ -118,6 +118,9 @@ func inbound(server *Server, w http.ResponseWriter, r *http.Request) {
 	peer := NewPeer(conn.RemoteAddr().String(), 100)
 	peer.server = server
 	peer.conn = conn
+	peer.Last = time.Now()
+	peer.Save()
+
 	peer.server.In <- peer
 
 	go peer.read()

@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/spf13/viper"
 	"net/http"
+	"time"
 )
 
 type Server struct {
@@ -38,6 +39,8 @@ func (s *Server) Connect(peer *Peer) {
 	}
 	peer.server = s
 	peer.conn = conn
+	peer.Last = time.Now()
+	peer.Save()
 
 	s.In <- peer
 

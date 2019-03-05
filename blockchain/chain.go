@@ -155,7 +155,7 @@ func (c *Chain) SaveBlock(block *Block) bool {
 	if c.ValidateBlock(block) == nil {
 		SharedStorage().SaveBlock(c.Ref, block)
 		SharedStorage().IncreaseCount(c)
-		utils.L.Debugf("new block saved: %#v", block)
+		utils.L.Debugf("new block saved: %#v", block.Hash)
 		if BlockSavedHook != nil {
 			BlockSavedHook(block)
 		}

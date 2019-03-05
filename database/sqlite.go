@@ -249,7 +249,13 @@ func (s SQLiteDriver) SavePeer(peer *network.Peer) {
 
 	_, err := s.db.Exec(query, peer.Addr, peer.Rank, peer.Last.Unix())
 	if err != nil {
-		utils.L.Debugf("existed peer: %v", peer.Addr)
+		utils.L.Warning("failed to add a peer: %v", err)
+	}
+
+	query = `UPDATE peers SET last=? WHERE addr=?`
+	_, err = s.db.Exec(query, peer.Last.Unix(), peer.Addr)
+	if err != nil {
+		utils.L.Warning("failed to update peer: %v", err)
 	}
 }
 
