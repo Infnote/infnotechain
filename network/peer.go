@@ -119,6 +119,7 @@ func inbound(server *Server, w http.ResponseWriter, r *http.Request) {
 	peer.server = server
 	peer.conn = conn
 	peer.Last = time.Now()
+	peer.IsServer = false
 
 	peer.server.In <- peer
 

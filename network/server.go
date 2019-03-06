@@ -40,6 +40,7 @@ func (s *Server) Connect(peer *Peer) {
 	peer.server = s
 	peer.conn = conn
 	peer.Last = time.Now()
+	peer.IsServer = true
 	peer.Save()
 
 	s.In <- peer
