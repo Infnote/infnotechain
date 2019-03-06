@@ -37,7 +37,7 @@ var cachedChains = map[int64]*cachedChain{}
 var chainContext *cachedChain
 var cachedPeers = map[string]bool{}
 
-func RunDaemon() {
+func RunDaemon(flags string) {
 	path := os.Args[0]
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		path = "/usr/local/bin/" + path
@@ -46,7 +46,7 @@ func RunDaemon() {
 		utils.L.Fatal("please put the executable file into /usr/local/bin/")
 	}
 
-	pid, err := syscall.ForkExec(path, []string{path, "run", "-fF"}, nil)
+	pid, err := syscall.ForkExec(path, []string{path, "run", "-fF" + flags}, nil)
 	if err != nil {
 		utils.L.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func StopDaemon() {
 		utils.L.Fatal(err)
 	}
 
-	fmt.Printf("[PID: %v] service stopped", pid)
+	fmt.Printf("[PID: %v] service stopped\n", pid)
 }
 
 func RunManageServer() {

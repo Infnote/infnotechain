@@ -48,7 +48,11 @@ var runCmd = &cobra.Command{
 			go RunManageServer()
 			services.PeerService()
 		} else {
-			RunDaemon()
+			if cmd.Flag("debug").Value.String() == "true" {
+				RunDaemon("D")
+			} else {
+				RunDaemon("")
+			}
 		}
 	},
 }
@@ -285,7 +289,7 @@ func initDirectCommands() {
 		"Running service and logging in foreground")
 	runCmd.Flags().BoolP(
 		"debug",
-		"d",
+		"D",
 		false,
 		"Running service as debug mode")
 	runCmd.Flags().BoolP(
