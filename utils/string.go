@@ -6,5 +6,5 @@ import (
 )
 
 func Intend(target string, level int) string {
-	return regexp.MustCompile("^").ReplaceAllString(target, strings.Repeat("\t", level))
+	return regexp.MustCompile("(?m)^").ReplaceAllString(target, strings.Repeat("\t", level))
 }

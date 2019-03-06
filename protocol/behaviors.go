@@ -91,7 +91,7 @@ func (b ResponseBlocks) String() string {
 	var result string
 	result += fmt.Sprintf("[Blocks]\n")
 	for _, block := range b.blocks {
-		result += utils.Intend(block.String(), 1)
+		result += utils.Intend(block.String(), 1) + "\n\n"
 	}
 	return result
 }
