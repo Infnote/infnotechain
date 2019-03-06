@@ -167,6 +167,8 @@ func (*ManageServer) CreateChain(ctx context.Context, request *manage.ChainCreat
 }
 
 func (*ManageServer) CreateBlock(ctx context.Context, request *manage.BlockCreationRequest) (*manage.BlockCreationResponse, error) {
+	utils.L.Debug("start creating a block")
+
 	chain := blockchain.LoadChain(request.ChainID)
 	if chain == nil {
 		return nil, nil
@@ -185,6 +187,7 @@ func (*ManageServer) CreateBlock(ctx context.Context, request *manage.BlockCreat
 	return &manage.BlockCreationResponse{
 		Height:    block.Height,
 		Time:      block.Time,
+
 		PrevHash:  block.PrevHash,
 		Hash:      block.Hash,
 		Signature: block.Signature,

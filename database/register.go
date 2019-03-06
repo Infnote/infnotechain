@@ -14,6 +14,7 @@ func Register() {
 	if err != nil {
 		utils.L.Fatal(err)
 	}
+
 	s := &SQLiteDriver{db}
 	blockchain.RegisterStorage(s)
 	network.RegisterStorage(s)

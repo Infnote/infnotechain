@@ -322,4 +322,6 @@ func initCLICommands() {
 	cliRootCmd.AddCommand(delPeerCmd)
 	cliRootCmd.AddCommand(connectCmd)
 	cliRootCmd.AddCommand(disconnectCmd)
+
+	initPerformanceCommands()
 }

@@ -8,6 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/mr-tron/base58"
 	"github.com/spf13/viper"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -16,8 +17,6 @@ import (
 type SQLiteDriver struct {
 	db *sql.DB
 }
-
-const SQLiteDBFile = "/usr/local/var/infnote/data.db"
 
 func (s SQLiteDriver) GetChain(chainID string, ref *int64, wif *string, count *uint64) bool {
 	query := `SELECT id, wif, count FROM chains WHERE chain_id = ? LIMIT 1`
@@ -77,7 +76,13 @@ func (s SQLiteDriver) GetBlock(id int64, height uint64) *blockchain.Block {
 		if err != nil {
 			utils.L.Fatal(err)
 		}
-		block.Payload, err = base58.Decode(payload)
+
+		if payload == "*" {
+			block.Payload, err = ioutil.ReadFile(viper.GetString("data.root") + block.Hash)
+		} else {
+			block.Payload, err = base58.Decode(payload)
+		}
+
 		if err != nil {
 			utils.L.Fatal(err)
 		}
@@ -102,7 +107,13 @@ func (s SQLiteDriver) GetBlockByHash(id int64, hash string) *blockchain.Block {
 		if err != nil {
 			utils.L.Fatal(err)
 		}
-		block.Payload, err = base58.Decode(payload)
+
+		if payload == "*" {
+			block.Payload, err = ioutil.ReadFile(viper.GetString("data.root") + block.Hash)
+		} else {
+			block.Payload, err = base58.Decode(payload)
+		}
+
 		if err != nil {
 			utils.L.Fatal(err)
 		}
@@ -131,7 +142,16 @@ func (s SQLiteDriver) GetBlocks(id int64, from uint64, to uint64) []*blockchain.
 		if err != nil {
 			utils.L.Fatal(err)
 		}
-		block.Payload, _ = base58.Decode(payload)
+
+		if payload == "*" {
+			block.Payload, err = ioutil.ReadFile(viper.GetString("data.root") + block.Hash)
+		} else {
+			block.Payload, err = base58.Decode(payload)
+		}
+
+		if err != nil {
+			utils.L.Fatal(err)
+		}
 		blocks = append(blocks, block)
 	}
 	return blocks
@@ -161,6 +181,18 @@ func (s SQLiteDriver) IncreaseCount(chain *blockchain.Chain) {
 }
 
 func (s SQLiteDriver) SaveBlock(id int64, block *blockchain.Block) {
+	payload := "*"
+	if len(block.Payload) > 1024 * 100 {
+		if err := ioutil.WriteFile(viper.GetString("data.root") + block.Hash, block.Payload, 0655); err != nil {
+			utils.L.Fatal("failed to write payload to file, abort.")
+			return
+		}
+
+		utils.L.Debug("write big payload (size: %v) to file", len(block.Payload))
+	} else {
+		payload = base58.Encode(block.Payload)
+	}
+
 	query := `
 		INSERT INTO blocks (height, time, hash, prev_hash, signature, payload, chain_id) 
 		VALUES (?, ?, ?, ?, ?, ?, ?) 
@@ -173,7 +205,7 @@ func (s SQLiteDriver) SaveBlock(id int64, block *blockchain.Block) {
 		block.Hash,
 		block.PrevHash,
 		block.Signature,
-		base58.Encode(block.Payload),
+		payload,
 		id)
 	if err != nil {
 		utils.L.Fatal(err)
@@ -268,11 +300,28 @@ func (s SQLiteDriver) DeletePeer(peer *network.Peer) {
 }
 
 func (s SQLiteDriver) CleanChain(chain *blockchain.Chain) {
-	query := `DELETE FROM chains WHERE id = ?`
+	query := `DELETE FROM chains WHERE chain_id = ?`
 
 	_, err := s.db.Exec(query, chain.ID)
 	if err != nil {
 		utils.L.Warning("failed to delete a chain")
+	}
+
+	query = `SELECT hash FROM blocks WHERE payload = '*'`
+	rows, err := s.db.Query(query)
+	if err != nil {
+		utils.L.Fatal(err)
+	}
+
+	for rows.Next() {
+		var hash string
+		if err := rows.Scan(&hash); err != nil {
+			utils.L.Fatal(err)
+		}
+
+		if err := os.Remove(viper.GetString("data.root") + hash); err != nil {
+			utils.L.Warning("%v", err)
+		}
 	}
 
 	query = `DELETE FROM blocks WHERE chain_id = ?`

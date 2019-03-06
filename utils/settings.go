@@ -7,7 +7,7 @@ import (
 )
 
 func init() {
-	if err := os.MkdirAll("/usr/local/var/infnote", 0755); err != nil {
+	if err := os.MkdirAll("/usr/local/var/infnote/payloads/", 0755); err != nil {
 		L.Fatal(err)
 	}
 
@@ -16,6 +16,7 @@ func init() {
 	viper.SetDefault("manage.host", "127.0.0.1")
 	viper.SetDefault("manage.port", 32700)
 	viper.SetDefault("data.file", "/usr/local/var/infnote/data.db")
+	viper.SetDefault("data.root", "/usr/local/var/infnote/payloads/")
 	viper.SetDefault("peers.sync", false)
 	viper.SetDefault("peers.retry", 5)
 	viper.SetDefault("hooks.block", nil)
@@ -42,6 +43,7 @@ func Migrate() {
 data:
 	# all chains and blocks are saved here
 	file: /usr/local/var/infnote/data.db
+	root: /usr/local/var/infnote/payloads/
 log:
 	# avaliable: debug, info, notice, warning, error, critical
 	level: info
