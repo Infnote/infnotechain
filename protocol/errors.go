@@ -1,6 +1,9 @@
 package protocol
 
-import "github.com/Infnote/infnotechain/blockchain"
+import (
+	"fmt"
+	"github.com/Infnote/infnotechain/blockchain"
+)
 
 type Error struct {
 	Code string `json:"code"`
@@ -13,6 +16,13 @@ func (e Error) Validate() *Error {
 
 func (e Error) React() []Behavior {
 	return nil
+}
+
+func (e Error) String() string {
+	var result string
+	result += fmt.Sprintf("[Code] %v\n", e.Code)
+	result += fmt.Sprintf("[Desc] %v\n", e.Desc)
+	return result
 }
 
 func InvalidMessageError(err string) *Error {

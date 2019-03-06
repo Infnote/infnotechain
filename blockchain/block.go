@@ -2,6 +2,7 @@ package blockchain
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/Infnote/infnotechain/blockchain/crypto"
 	"github.com/Infnote/infnotechain/utils"
 	"github.com/mr-tron/base58"
@@ -90,6 +91,21 @@ func (b Block) Serialize() []byte {
 
 	b.data = j[:]
 	return j
+}
+
+func (b Block) String() string {
+	var result string
+	result += fmt.Sprintf("[Height   ] %v\n", b.Height)
+	result += fmt.Sprintf("[Time     ] %v\n", b.Time)
+	result += fmt.Sprintf("[PrevHash ] %v\n", b.PrevHash)
+	result += fmt.Sprintf("[Hash     ] %v\n", b.Hash)
+	result += fmt.Sprintf("[Signature] %v\n", b.Signature)
+	if len(b.Payload) > 100 {
+		result += fmt.Sprintf("[Payload  ] (%v bytes) %v ...\n", len(b.Payload), b.Payload[:100])
+	} else {
+		result += fmt.Sprintf("[Payload  ] %v\n", b.Payload)
+	}
+	return result
 }
 
 func DeserializeBlock(message json.RawMessage) (*Block, error) {

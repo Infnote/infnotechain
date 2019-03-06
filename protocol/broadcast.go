@@ -74,3 +74,10 @@ func (b *BroadcastBlock) React() []Behavior {
 	}()
 	return nil
 }
+
+func (b BroadcastBlock) String() string {
+	var result string
+	result += fmt.Sprintf("[ID] %v\n", b.ID)
+	result += utils.Intend(b.block.String(), 1)
+	return result
+}

@@ -410,7 +410,11 @@ func DumpBlock(id string, height uint64) {
 
 		buffer := &bytes.Buffer{}
 		if err := json.Indent(buffer, in.Payload, "", "\t"); err != nil {
-			fmt.Printf("[Payload  ] %v\n", string(in.Payload))
+			if len(in.Payload) > 100 {
+				fmt.Printf("[Payload  ] (%v bytes) %v ...\n", len(in.Payload), string(in.Payload[:100]))
+			} else {
+				fmt.Printf("[Payload  ] %v\n", string(in.Payload))
+			}
 		} else {
 			fmt.Println("[Payload  ]")
 			_, err := buffer.WriteTo(os.Stdout)

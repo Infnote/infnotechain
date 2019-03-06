@@ -18,6 +18,9 @@ type Behavior interface {
 
 	// Call Validate() before this method
 	React() []Behavior
+
+	// Description for debuging
+	String() string
 }
 
 // - Declarations
@@ -46,6 +49,51 @@ type ResponsePeers struct {
 type ResponseBlocks struct {
 	Blocks []json.RawMessage `json:"blocks"`
 	blocks []*blockchain.Block
+}
+
+
+// - Stringer
+func (b Info) String() string {
+	var result string
+	result += fmt.Sprintf("[Version  ] %v\n", b.Version)
+	result += fmt.Sprintf("[Peers    ] %v\n", b.Peers)
+	result += fmt.Sprintf("[Chains   ]\n")
+	for id, count := range b.Chains {
+		result += fmt.Sprintf("\t[%v] %v\n", id, count)
+	}
+	result += fmt.Sprintf("[Platform ] %v\n", b.Platform)
+	result += fmt.Sprintf("[Full Node] %v\n", b.FullNode)
+	return result
+}
+
+func (b RequestPeers) String() string {
+	return fmt.Sprintf("[Count] %v", b.Count)
+}
+
+func (b RequestBlocks) String() string {
+	var result string
+	result += fmt.Sprintf("[Chain ID] %v\n", b.ChainID)
+	result += fmt.Sprintf("[From    ] %v\n", b.From)
+	result += fmt.Sprintf("[To      ] %v\n", b.To)
+	return result
+}
+
+func (b ResponsePeers) String() string {
+	var result string
+	result += fmt.Sprintf("[Peers]\n")
+	for _, peer := range b.Peers {
+		result += fmt.Sprintf("%v\n", peer)
+	}
+	return result
+}
+
+func (b ResponseBlocks) String() string {
+	var result string
+	result += fmt.Sprintf("[Blocks]\n")
+	for _, block := range b.blocks {
+		result += utils.Intend(block.String(), 1)
+	}
+	return result
 }
 
 // TODO: add support for windows
