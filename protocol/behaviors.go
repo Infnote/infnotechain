@@ -252,9 +252,15 @@ func (b Info) React() []Behavior {
 func (b RequestBlocks) React() []Behavior {
 	chain := blockchain.LoadChain(b.ChainID)
 
+	if !viper.GetBool("message.division") {
+		return []Behavior{&ResponseBlocks{blocks: chain.GetBlocks(b.From, b.To)}}
+	}
+
 	var behaviors []Behavior
 	var blocks []*blockchain.Block
 	size := 0
+	maxsize := viper.GetInt("message.maxsize") * 1024 * 1024
+
 	for i := b.From; i <= b.To; i++ {
 		block := chain.GetBlock(i)
 		if block == nil {
@@ -262,7 +268,7 @@ func (b RequestBlocks) React() []Behavior {
 		}
 
 		// TODO: extract magic number
-		if size > 0 && size+len(block.Payload) > 1024*1024 {
+		if size > 0 && size+len(block.Payload) > maxsize {
 			behaviors = append(behaviors, &ResponseBlocks{blocks: blocks})
 			blocks = []*blockchain.Block{block}
 			size = len(block.Payload)

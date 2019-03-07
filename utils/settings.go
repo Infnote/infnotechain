@@ -21,6 +21,8 @@ func init() {
 	viper.SetDefault("peers.retry", 5)
 	viper.SetDefault("hooks.block", nil)
 	viper.SetDefault("daemon.pid", "/tmp/ifc.pid")
+	viper.SetDefault("message.division", true)
+	viper.SetDefault("message.maxsize", 1)
 
 	// debug, info, notice, warning, error, critical
 	viper.SetDefault("log.level", "info")
@@ -60,6 +62,13 @@ server:
 	# ifc service listen on
 	host: 0.0.0.0
 	port: 32767
+message:
+	# message for transmit blocks will be divided to several messages
+	division: true
+	
+	# max block payload size (MB) of one message can contain
+	# only effective when division is true
+	maxsize: 1
 # hooks:
 	# ifc service will call this by POST every time when receive a new block
 	# blocks: "http://localhost/hooks/new_block"`), 0655)
