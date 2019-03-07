@@ -15,12 +15,21 @@ type Server struct {
 	Out   chan *Peer
 }
 
+const BufferSize = 1024 * 1024 * 2
+
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:  4096,
-	WriteBufferSize: 4096,
-	CheckOrigin: func(r *http.Request) bool {
+	ReadBufferSize:  BufferSize,
+	WriteBufferSize: BufferSize,
+	CheckOrigin:     func(r *http.Request) bool {
 		return true
 	},
+}
+
+var dialer = &websocket.Dialer{
+	ReadBufferSize:   BufferSize,
+	WriteBufferSize:  BufferSize,
+	Proxy:            http.ProxyFromEnvironment,
+	HandshakeTimeout: 45 * time.Second,
 }
 
 func NewServer() *Server {
@@ -32,7 +41,7 @@ func NewServer() *Server {
 }
 
 func (s *Server) Connect(peer *Peer) {
-	conn, _, err := websocket.DefaultDialer.Dial(peer.Addr, nil)
+	conn, _, err := dialer.Dial(peer.Addr, nil)
 	if err != nil {
 		utils.L.Warningf("failed to connect peer: %v", err)
 		return
