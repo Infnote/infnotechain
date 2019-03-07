@@ -169,7 +169,7 @@ func (c *Chain) ValidateBlockCached(block *Block) BlockValidationError {
 	if err != nil {
 		return err
 	}
-	utils.L.Debugf("block cached: %v", pretty.Sprint(block))
+	utils.L.Debugf("block cached: %v", block)
 	c.cache[block.Height] = block
 	return nil
 }

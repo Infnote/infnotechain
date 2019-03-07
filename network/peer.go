@@ -63,7 +63,7 @@ func (c *Peer) read() {
 		//utils.L.Debugf("peer %v reading closed", c.Addr)
 	}()
 
-	c.conn.SetReadLimit(MaxMessageSize)
+	//c.conn.SetReadLimit(MaxMessageSize)
 	for {
 		_, data, err := c.conn.ReadMessage()
 		if err != nil {
