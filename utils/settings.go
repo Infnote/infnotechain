@@ -28,8 +28,14 @@ func init() {
 	viper.SetDefault("log.level", "info")
 	viper.SetDefault("log.file", "/usr/local/var/infnote/daemon.log")
 
+	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("/usr/local/etc/infnote/")
+	err := viper.ReadInConfig()
+	if err != nil {
+		L.Infof("%v", err)
+		L.Infof("failed to load config file, using default settings")
+	}
 }
 
 func Migrate() {
@@ -40,38 +46,38 @@ func Migrate() {
 
 	err = ioutil.WriteFile("/usr/local/etc/infnote/config.yaml", []byte(
 `daemon:
-	# ifc service process
-	pid: /tmp/ifc.pid
+    # ifc service process
+    pid: /tmp/ifc.pid
 data:
-	# all chains and blocks are saved here
-	file: /usr/local/var/infnote/data.db
-	root: /usr/local/var/infnote/payloads/
+    # all chains and blocks are saved here
+    file: /usr/local/var/infnote/data.db
+    root: /usr/local/var/infnote/payloads/
 log:
-	# avaliable: debug, info, notice, warning, error, critical
-	level: info
-	file: /usr/local/var/infnote/daemon.log
+    # avaliable: debug, info, notice, warning, error, critical
+    level: info
+    file: /usr/local/var/infnote/daemon.log
 manage:
-	# rpc management listen on
-	host: 127.0.0.1
-	port: 32700
+    # rpc management listen on
+    host: 127.0.0.1
+    port: 32700
 peers:
-	retry: 5
-	# ifc will automatically sync peer list with any connected peer when set true
-	sync: false
+    retry: 5
+    # ifc will automatically sync peer list with any connected peer when set true
+    sync: false
 server:
-	# ifc service listen on
-	host: 0.0.0.0
-	port: 32767
+    # ifc service listen on
+    host: 0.0.0.0
+    port: 32767
 message:
-	# message for transmit blocks will be divided to several messages
-	division: true
-	
-	# max block payload size (MB) of one message can contain
-	# only effective when division is true
-	maxsize: 1
+    # message for transmit blocks will be divided to several messages
+    division: true
+
+    # max block payload size (MB) of one message can contain
+    # only effective when division is true
+    maxsize: 1
 # hooks:
-	# ifc service will call this by POST every time when receive a new block
-	# blocks: "http://localhost/hooks/new_block"`), 0655)
+    # ifc service will call this by POST every time when receive a new block
+    # blocks: http://localhost/hooks/new_block`), 0655)
 
 	if err != nil {
 		L.Fatal(err)
