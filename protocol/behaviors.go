@@ -211,7 +211,7 @@ func (b *ResponseBlocks) Validate() *Error {
 			return ChainNotAcceptError(fmt.Sprintf("recovered chain ID: %v", block.ChainID()))
 		}
 
-		verr := chain.ValidateBlockCached(block)
+		verr := chain.CacheBlock(block)
 		if verr != nil {
 			utils.L.Debugf("%v", verr)
 			return BlockValidationError(verr)

@@ -164,7 +164,7 @@ func (c *Chain) SaveBlock(block *Block) bool {
 	return false
 }
 
-func (c *Chain) ValidateBlockCached(block *Block) BlockValidationError {
+func (c *Chain) CacheBlock(block *Block) BlockValidationError {
 	err := c.ValidateBlock(block)
 	if err != nil {
 		return err

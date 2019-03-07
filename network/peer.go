@@ -73,6 +73,7 @@ func (c *Peer) read() {
 			safeClose(c.Send)
 			return
 		}
+		utils.L.Debugf("message received: %v bytes", len(data))
 		c.Recv <- data
 	}
 }
@@ -95,6 +96,8 @@ func (c *Peer) write() {
 			if err != nil {
 				return
 			}
+
+			utils.L.Debugf("writing message: %v bytes", len(msg))
 			_, _ = w.Write(msg)
 			_ = w.Close()
 		}

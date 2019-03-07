@@ -188,7 +188,7 @@ func (s SQLiteDriver) SaveBlock(id int64, block *blockchain.Block) {
 			return
 		}
 
-		utils.L.Debug("write big payload (size: %v) to file", len(block.Payload))
+		utils.L.Debugf("write big payload (size: %v) to file", len(block.Payload))
 	} else {
 		payload = base58.Encode(block.Payload)
 	}
