@@ -3,7 +3,6 @@ package blockchain
 import (
 	"github.com/Infnote/infnotechain/blockchain/crypto"
 	"github.com/Infnote/infnotechain/utils"
-	"github.com/kr/pretty"
 	"github.com/mr-tron/base58"
 	"time"
 )
@@ -179,7 +178,7 @@ func (c *Chain) CommitCache() {
 		SharedStorage().SaveBlock(c.Ref, block)
 		SharedStorage().IncreaseCount(c)
 		delete(c.cache, block.Height)
-		utils.L.Debugf("block saved: %v", pretty.Sprint(block))
+		utils.L.Debugf("block saved: %v", block)
 	}
 }
 
