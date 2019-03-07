@@ -101,8 +101,8 @@ func (b Block) String() string {
 	result += fmt.Sprintf("[PrevHash ] %v\n", b.PrevHash)
 	result += fmt.Sprintf("[Hash     ] %v\n", b.Hash)
 	result += fmt.Sprintf("[Signature] %v\n", b.Signature)
-	if len(b.Payload) > 100 {
-		result += fmt.Sprintf("[Payload  ] (%v bytes) %v ...", len(b.Payload), string(b.Payload[:100]))
+	if len(b.Payload) > 50 {
+		result += fmt.Sprintf("[Payload  ] (%v bytes) %v ...", len(b.Payload), string(b.Payload[:50]))
 	} else {
 		result += fmt.Sprintf("[Payload  ] %v", string(b.Payload))
 	}

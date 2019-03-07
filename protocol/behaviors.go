@@ -262,13 +262,13 @@ func (b RequestBlocks) React() []Behavior {
 		}
 
 		// TODO: extract magic number
-		if size+block.Size() > 1024*1024 {
+		if size > 0 && size+len(block.Payload) > 1024*1024 {
 			behaviors = append(behaviors, &ResponseBlocks{blocks: blocks})
 			blocks = []*blockchain.Block{block}
-			size = block.Size()
+			size = len(block.Payload)
 		} else {
 			blocks = append(blocks, block)
-			size += block.Size()
+			size += len(block.Payload)
 		}
 	}
 	if len(blocks) > 0 {
