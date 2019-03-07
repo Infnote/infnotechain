@@ -48,6 +48,10 @@ var runCmd = &cobra.Command{
 			go RunManageServer()
 			services.PeerService()
 		} else {
+			if utils.CheckProcessAlive() {
+				fmt.Println("Infnote Chain service is already running")
+				return
+			}
 			if cmd.Flag("debug").Value.String() == "true" {
 				RunDaemon("D")
 			} else {
