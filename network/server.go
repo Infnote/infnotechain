@@ -18,18 +18,20 @@ type Server struct {
 const BufferSize = 1024 * 1024 * 2
 
 var upgrader = websocket.Upgrader{
-	ReadBufferSize:  BufferSize,
-	WriteBufferSize: BufferSize,
-	CheckOrigin:     func(r *http.Request) bool {
+	ReadBufferSize:    BufferSize,
+	WriteBufferSize:   BufferSize,
+	EnableCompression: true,
+	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
 }
 
 var dialer = &websocket.Dialer{
-	ReadBufferSize:   BufferSize,
-	WriteBufferSize:  BufferSize,
-	Proxy:            http.ProxyFromEnvironment,
-	HandshakeTimeout: 45 * time.Second,
+	ReadBufferSize:    BufferSize,
+	WriteBufferSize:   BufferSize,
+	EnableCompression: true,
+	Proxy:             http.ProxyFromEnvironment,
+	HandshakeTimeout:  45 * time.Second,
 }
 
 func NewServer() *Server {
