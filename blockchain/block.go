@@ -1,6 +1,7 @@
 package blockchain
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/Infnote/infnotechain/blockchain/crypto"
@@ -82,7 +83,7 @@ func (b Block) Serialize() []byte {
 	data := struct {
 		Alias
 		Payload string `json:"payload"`
-	}{(Alias)(b), base58.Encode(b.Payload)}
+	}{(Alias)(b), base64.StdEncoding.EncodeToString(b.Payload)}
 
 	j, err := json.Marshal(data)
 	if err != nil {
@@ -118,7 +119,7 @@ func DeserializeBlock(message json.RawMessage) (*Block, error) {
 		return nil, err
 	}
 
-	payload, err := base58.Decode(data.Payload)
+	payload, err := base64.StdEncoding.DecodeString(data.Payload)
 	if err != nil {
 		return nil, err
 	}

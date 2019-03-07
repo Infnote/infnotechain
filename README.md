@@ -1,4 +1,4 @@
-# Infnote Chain ![Go Version](https://img.shields.io/badge/go-1.11.4-green.svg)
+# Infnote Chain ![Go Version](https://img.shields.io/badge/go-1.11.4-green.svg) ![Go Report](https://goreportcard.com/badge/github.com/Infnote/infnotechain)
 
 
 
