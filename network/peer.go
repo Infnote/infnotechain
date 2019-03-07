@@ -1,6 +1,7 @@
 package network
 
 import (
+	"compress/flate"
 	"github.com/Infnote/infnotechain/utils"
 	"github.com/gorilla/websocket"
 	"net/http"
@@ -47,7 +48,8 @@ func NewPeer(addr string, rank int) *Peer {
 		Rank: rank,
 		Last: time.Now(),
 		Recv: make(chan []byte),
-		Send: make(chan []byte)}
+		Send: make(chan []byte),
+	}
 }
 
 func (c *Peer) Save() {
@@ -87,6 +89,9 @@ func (c *Peer) write() {
 		select {
 		case msg, ok := <-c.Send:
 			_ = c.conn.SetWriteDeadline(time.Now().Add(WriteWait))
+			c.conn.EnableWriteCompression(true)
+			_ = c.conn.SetCompressionLevel(flate.BestCompression)
+
 			if !ok {
 				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return

@@ -55,6 +55,7 @@ type ResponseBlocks struct {
 // - Stringer
 func (b Info) String() string {
 	var result string
+	result += fmt.Sprintf("========== Info ==========\n")
 	result += fmt.Sprintf("[Version  ] %v\n", b.Version)
 	result += fmt.Sprintf("[Peers    ] %v\n", b.Peers)
 	result += fmt.Sprintf("[Chains   ]\n")
@@ -67,11 +68,15 @@ func (b Info) String() string {
 }
 
 func (b RequestPeers) String() string {
-	return fmt.Sprintf("[Count] %v", b.Count)
+	var result string
+	result += fmt.Sprintf("====== RequestPeers ======\n")
+	result += fmt.Sprintf("[Count] %v\n", b.Count)
+	return result
 }
 
 func (b RequestBlocks) String() string {
 	var result string
+	result += fmt.Sprintf("===== RequestBlocks ======\n")
 	result += fmt.Sprintf("[Chain ID] %v\n", b.ChainID)
 	result += fmt.Sprintf("[From    ] %v\n", b.From)
 	result += fmt.Sprintf("[To      ] %v\n", b.To)
@@ -80,15 +85,17 @@ func (b RequestBlocks) String() string {
 
 func (b ResponsePeers) String() string {
 	var result string
+	result += fmt.Sprintf("===== ResponsePeers ======\n")
 	result += fmt.Sprintf("[Peers]\n")
 	for _, peer := range b.Peers {
-		result += fmt.Sprintf("%v\n", peer)
+		result += fmt.Sprintf("\t%v\n", peer)
 	}
 	return result
 }
 
 func (b ResponseBlocks) String() string {
 	var result string
+	result += fmt.Sprintf("===== ResponseBlocks =====\n")
 	result += fmt.Sprintf("[Blocks]\n")
 	for _, block := range b.blocks {
 		result += utils.Intend(block.String(), 1) + "\n\n"
