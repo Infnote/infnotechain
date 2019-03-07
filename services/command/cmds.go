@@ -245,7 +245,12 @@ var delChainCmd = &cobra.Command{
 	Short: "delete a chain",
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		DeleteChain(args[0])
+		ref, err := strconv.Atoi(args[0])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		DeleteChain(int64(ref))
 	},
 }
 

@@ -202,6 +202,7 @@ func (*ManageServer) AddChain(ctx context.Context, request *manage.ChainRequest)
 func (*ManageServer) DeleteChain(ctx context.Context, request *manage.ChainRequest) (*manage.CommonResponse, error) {
 	if chain := blockchain.LoadChain(request.Id); chain != nil {
 		blockchain.SharedStorage().CleanChain(chain)
+		blockchain.ResetChainCache()
 		return &manage.CommonResponse{Success: true}, nil
 	} else {
 		return &manage.CommonResponse{Success: false, Error: "deleting chain is not exist"}, nil
@@ -480,8 +481,26 @@ func AddChain(id string) {
 	}
 }
 
-func DeleteChain(id string) {
-	response, err := IFCManageClient.DeleteChain(context.Background(), &manage.ChainRequest{Id: id})
+func DeleteChain(ref int64) {
+	chain, ok := cachedChains[ref]
+	if !ok {
+		fmt.Println("unknown ref of chain, run 'chains' first")
+		return
+	}
+
+	fmt.Printf("Are you sure to DELETE chain %v with all %v blocks? (y/N) ", chain.ID, chain.Count)
+	var confirm string
+	if _, err := fmt.Scanln(&confirm); err != nil {
+		return
+	}
+
+	if confirm != "y" && confirm != "Y" {
+		return
+	}
+
+	fmt.Println("Deleting...")
+
+	response, err := IFCManageClient.DeleteChain(context.Background(), &manage.ChainRequest{Id: chain.ID})
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -489,6 +508,7 @@ func DeleteChain(id string) {
 
 	if response.Success {
 		fmt.Println("Deleted")
+		delete(cachedChains, ref)
 	} else {
 		fmt.Printf("%v\n", response.Error)
 	}

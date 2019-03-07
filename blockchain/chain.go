@@ -18,6 +18,10 @@ type Chain struct {
 var loadedChains = map[string]*Chain{}
 var BlockSavedHook func(block *Block) = nil
 
+func ResetChainCache() {
+	loadedChains = map[string]*Chain{}
+}
+
 // Create a chain object with genesis block payload
 func CreateChain(payload []byte) *Chain {
 	key := crypto.NewKey()
