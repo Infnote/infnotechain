@@ -172,7 +172,7 @@ func (c *Chain) CacheBlock(block *Block) BlockValidationError {
 	if err != nil {
 		return err
 	}
-	utils.L.Debugf("block cached: %v", block)
+	utils.L.Debugf("block cached: \n%v", block)
 	c.cache[block.Height] = block
 	return nil
 }
@@ -182,7 +182,7 @@ func (c *Chain) CommitCache() {
 		SharedStorage().SaveBlock(c.Ref, block)
 		SharedStorage().IncreaseCount(c)
 		delete(c.cache, block.Height)
-		utils.L.Debugf("block saved: %v", block)
+		utils.L.Debugf("block saved: \n%v", block)
 	}
 }
 
