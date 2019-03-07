@@ -64,7 +64,7 @@ func (e DangledBlockError) Code() string {
 }
 
 func (e InvalidBlockError) Error() string {
-	return e.desc + ":\n" + pretty.Sprint(e.block)
+	return e.desc + ":\n" + e.block.String()
 }
 
 func (e ForkError) Error() string {
@@ -76,7 +76,7 @@ func (e ForkError) Error() string {
 }
 
 func (e ExistBlockError) Error() string {
-	return e.desc + ":\n" + pretty.Sprint(e.block)
+	return e.desc + ":\n" + e.block.String()
 }
 
 func (e MismatchedIDError) Error() string {
@@ -87,5 +87,5 @@ func (e MismatchedIDError) Error() string {
 }
 
 func (e DangledBlockError) Error() string {
-	return e.desc + ":\n" + pretty.Sprint(e.block)
+	return e.desc + ":\n" + e.block.String()
 }
