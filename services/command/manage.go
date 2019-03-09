@@ -246,12 +246,18 @@ func (*ManageServer) ConnectPeer(ctx context.Context, request *manage.PeerReques
 	if peer := services.SharedServer.Peers[request.Addr]; peer != nil {
 		return &manage.CommonResponse{Success: false, Error: "already connected"}, nil
 	}
+
 	if peer := network.SharedStorage().GetPeer(request.Addr); peer != nil {
-		services.SharedServer.Connect(peer)
+		if err := services.SharedServer.Connect(peer); err != nil {
+			return &manage.CommonResponse{Success: false, Error: err.Error()}, nil
+		}
 		return &manage.CommonResponse{Success: true}, nil
 	}
+
 	peer := network.NewPeer(request.Addr, 100)
-	services.SharedServer.Connect(peer)
+	if err := services.SharedServer.Connect(peer); err != nil {
+		return &manage.CommonResponse{Success: false, Error: err.Error()}, nil
+	}
 	return &manage.CommonResponse{Success: true}, nil
 }
 

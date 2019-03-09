@@ -42,11 +42,11 @@ func NewServer() *Server {
 	}
 }
 
-func (s *Server) Connect(peer *Peer) {
+func (s *Server) Connect(peer *Peer) error {
 	conn, _, err := dialer.Dial(peer.Addr, nil)
 	if err != nil {
 		utils.L.Warningf("failed to connect peer: %v", err)
-		return
+		return err
 	}
 	peer.server = s
 	peer.conn = conn
@@ -58,6 +58,8 @@ func (s *Server) Connect(peer *Peer) {
 
 	go peer.read()
 	go peer.write()
+
+	return nil
 }
 
 func (s *Server) Serve() {
