@@ -97,7 +97,7 @@ func Completer(doc prompt.Document) []prompt.Suggest {
 	if args[0] == "createblock" && len(args) == 2 {
 		return []prompt.Suggest{
 			{Text: "string"},
-			{Text: "base58"},
+			{Text: "base64"},
 		}
 	}
 

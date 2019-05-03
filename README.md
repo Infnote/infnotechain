@@ -26,6 +26,8 @@ Don't forget to set `GOPATH` correctly and add `/usr/local/bin` to your `PATH` v
 
 ## TODO:
 
+- [ ] Communication starts with "Sync" message which will be responded an "Info"
+- [ ] Dangled block error trigger "Sync"
 - [ ] Writing test
 - [ ] Check if peer connection is still alive by send a info 
 - [x] ~~Respond 'Error' when cannot respond correctly~~

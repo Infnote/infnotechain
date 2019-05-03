@@ -1,11 +1,11 @@
 package command
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/Infnote/infnotechain/services"
 	"github.com/Infnote/infnotechain/utils"
-	"github.com/mr-tron/base58"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"strconv"
@@ -208,10 +208,10 @@ var createBlockCmd = &cobra.Command{
 			return errors.New("chain context not set")
 		}
 		if len(args) < 2 {
-			return errors.New("usage: createblock [string|base58] [payload]")
+			return errors.New("usage: createblock [string|base64] [payload]")
 		}
-		if args[0] != "string" && args[0] != "base58" {
-			return errors.New("only support string or base58")
+		if args[0] != "string" && args[0] != "base64" {
+			return errors.New("only support string or base64")
 		}
 		return nil
 	},
@@ -219,8 +219,8 @@ var createBlockCmd = &cobra.Command{
 		var payload []byte
 		if args[0] == "string" {
 			payload = []byte(args[1])
-		} else if args[0] == "base58" {
-			b, err := base58.Decode(args[1])
+		} else if args[0] == "base64" {
+			b, err := base64.StdEncoding.DecodeString(args[1])
 			if err != nil {
 				fmt.Println(err)
 				return
